@@ -1,6 +1,4 @@
-import { BooksModule } from './books/books.module';
-import { BooksService } from './books/books.service';
-import { BooksController } from './books/books.controller';
+import { BookModule } from './books/book.module';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -9,7 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
-    BooksModule,
+    BookModule,
     ConfigModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'postgres',
