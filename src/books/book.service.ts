@@ -5,6 +5,7 @@ import { BookEntity } from './book.entity';
 import { BookCreateDto } from './dto/book-create.dto';
 import { BookUpdateDto } from './dto/book-update.dto';
 import { Book } from './book.domain';
+import { generateEAN13 } from 'src/utils/helpers';
 
 @Injectable()
 export class BookService {
@@ -13,24 +14,9 @@ export class BookService {
     private readonly booksRepository: Repository<BookEntity>,
   ) { }
 
-  async generateEAN13(): Promise<string> {
-    let ean = '';
-
-    for (let i = 0; i < 13; i++) {
-      ean += Math.floor(Math.random() * 10);
-    }
-
-    const exists = await this.booksRepository.findOne({
-      where: { code: ean },
-    });
-
-    if (exists) return this.generateEAN13();
-
-    return ean;
-  }
 
   async create(createBookDto: BookCreateDto): Promise<Book> {
-    const code = await this.generateEAN13();
+    const code = await generateEAN13();
     const book = this.booksRepository.create({ ...createBookDto, code });
 
     return Book.fromEntities(await this.booksRepository.save(book));
