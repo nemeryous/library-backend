@@ -1,8 +1,10 @@
 {
-  "singleQuote": true,
-  "trailingComma": "all",
+
   "endOfLine": "auto",
   "rules": {
     "linebreak-style": ["error", "windows"]
-  }
+  },
+  "printWidth": 60,
+  "singleQuote": true,
+  "trailingComma": "all"
 }

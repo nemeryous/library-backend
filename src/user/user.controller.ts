@@ -21,7 +21,9 @@ export class UserController {
   }
 
   @Post()
-  async create(@Body() userRequestDto: UserRequestDto): Promise<UserResponse> {
+  async create(
+    @Body() userRequestDto: UserRequestDto,
+  ): Promise<UserResponse> {
     return this.userService.create(userRequestDto);
   }
 
@@ -31,7 +33,9 @@ export class UserController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number): Promise<UserResponse | null> {
+  async findOne(
+    @Param('id') id: number,
+  ): Promise<UserResponse | null> {
     return this.userService.findOne(id);
   }
 

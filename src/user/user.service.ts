@@ -1,9 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { UserRequestDto } from './dto/user-request.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserResponse } from './response/user.response';
+import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class UserService {
@@ -14,19 +18,26 @@ export class UserService {
 
   async findAll(): Promise<UserResponse[]> {
     const users = await this.userRepository.find();
-    return users.map((user) => UserResponse.toUserResponse(user));
+    return users.map((user) =>
+      UserResponse.toUserResponse(user),
+    );
   }
 
   async findOne(id: number): Promise<UserResponse | null> {
-    const user = await this.userRepository.findOneBy({ id });
+    const user = await this.userRepository.findOneBy({
+      id,
+    });
     if (!user) {
-      return null;
+      throw new NotFoundException('User not found');
     }
     return UserResponse.toUserResponse(user);
   }
 
-  async create(userRequestDto: UserRequestDto): Promise<UserResponse> {
-    const createUser = this.userRepository.create(userRequestDto);
+  async create(
+    userRequestDto: UserRequestDto,
+  ): Promise<UserResponse> {
+    const createUser =
+      this.userRepository.create(userRequestDto);
     return UserResponse.toUserResponse(
       await this.userRepository.save(createUser),
     );
@@ -37,9 +48,11 @@ export class UserService {
     userRequestDto: UserRequestDto,
   ): Promise<UserResponse | null> {
     await this.userRepository.update(id, userRequestDto);
-    const user = await this.userRepository.findOneBy({ id });
+    const user = await this.userRepository.findOneBy({
+      id,
+    });
     if (!user) {
-      return null;
+      throw new NotFoundException('User not found');
     }
     return UserResponse.toUserResponse(user);
   }

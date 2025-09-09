@@ -12,7 +12,15 @@ export class UserResponse {
   email: string;
 
   static toUserResponse(user: User): UserResponse {
-    const { id, name, email } = user;
-    return { id, name, email };
+    const {
+      id: userId,
+      name: userName,
+      email: userEmail,
+    } = user;
+    return {
+      id: userId,
+      name: userName,
+      email: userEmail,
+    };
   }
 }
