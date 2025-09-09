@@ -9,7 +9,7 @@ export class Book {
   name: string;
 
   @Column({ unique: true })
-  ean13: string;
+  code: string;
 
   @Column({ default: true })
   available: boolean;

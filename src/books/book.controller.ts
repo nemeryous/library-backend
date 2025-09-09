@@ -6,12 +6,13 @@ import {
   Param,
   Post,
   Put,
+  NotFoundException,
 } from '@nestjs/common';
 import { BookService } from './book.service';
 import { BookCreateDto } from './dto/book-create.dto';
 import { BookUpdateDto } from './dto/book-update.dto';
 import { BookItem } from './response/book-item';
-import { BookDetails } from './response/book-details';
+import { BookDetail } from './response/book-detail';
 
 @Controller('books')
 export class BookController {
@@ -19,34 +20,42 @@ export class BookController {
 
   @Get()
   async findAll(): Promise<BookItem[]> {
-    return this.booksService.findAll();
+    return (await this.booksService.findAll()).map(BookItem.toBookItem);
   }
 
   @Get('available')
   async findAvailableBooks(): Promise<BookItem[]> {
-    return this.booksService.findAvailableBooks();
+    return (await this.booksService.findAvailableBooks()).map(
+      BookItem.toBookItem,
+    );
   }
 
   @Post()
-  async create(@Body() createBookDto: BookCreateDto): Promise<BookItem> {
-    return this.booksService.create(createBookDto);
+  async create(@Body() bookCreateDto: BookCreateDto): Promise<BookItem> {
+    return BookItem.toBookItem(await this.booksService.create(bookCreateDto));
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number): Promise<BookDetails | null> {
-    return this.booksService.findOne(id);
+  async findOne(@Param('id') id: number): Promise<BookDetail> {
+    const book = await this.booksService.findOne(id);
+
+    return BookDetail.toBookDetails(book);
   }
 
   @Put(':id')
   async update(
     @Param('id') id: number,
-    @Body() updateBookDto: BookUpdateDto,
-  ): Promise<BookItem | null> {
-    return this.booksService.update(id, updateBookDto);
-  }
+    @Body() bookUpdateDto: BookUpdateDto,
+  ): Promise<BookItem> {
+    const updatedBook = await this.booksService.update(id, bookUpdateDto);
 
+    return BookItem.toBookItem(updatedBook);
+  }
+  q;
   @Delete(':id')
   async remove(@Param('id') id: number): Promise<void> {
+    const book = await this.booksService.findOne(id);
+
     return this.booksService.remove(id);
   }
 }

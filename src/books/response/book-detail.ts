@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Book } from '../book.entity';
 
-export class BookDetails {
+export class BookDetail {
   @ApiProperty()
   id: number;
 
@@ -23,12 +23,11 @@ export class BookDetails {
   @ApiProperty()
   category: string;
 
-  static toBookDetails(book: Book): BookDetails {
-    const { id, name, ean13, available, author, description, category } = book;
+  static toBookDetails(book: Book): BookDetail {
     return {
       id: book.id,
       name: book.name,
-      ean13: book.ean13,
+      ean13: book.code,
       available: book.available,
       author: book.author,
       description: book.description,

@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Book } from './book.entity';
 import { BookCreateDto } from './dto/book-create.dto';
 import { BookUpdateDto } from './dto/book-update.dto';
 import { BookItem } from './response/book-item';
-import { BookDetails } from './response/book-details';
+import { BookDetail } from './response/book-detail';
 
 @Injectable()
 export class BookService {
@@ -22,7 +22,7 @@ export class BookService {
     }
 
     const exists = await this.booksRepository.findOne({
-      where: { ean13: ean },
+      where: { code: ean },
     });
 
     if (exists) return this.generateEAN13();
@@ -30,44 +30,53 @@ export class BookService {
     return ean;
   }
 
-  async create(createBookDto: BookCreateDto): Promise<BookItem> {
-    const ean13 = await this.generateEAN13();
-    const book = this.booksRepository.create({ ...createBookDto, ean13 });
+  async create(createBookDto: BookCreateDto): Promise<Book> {
+    const code = await this.generateEAN13();
+    const book = this.booksRepository.create({ ...createBookDto, code });
 
-    return BookItem.toBookItem(await this.booksRepository.save(book));
+    return await this.booksRepository.save(book);
   }
 
-  async findAll(): Promise<BookItem[]> {
-    const books = await this.booksRepository.find();
-
-    return books.map(BookItem.toBookItem);
+  async findAll(): Promise<Book[]> {
+    return await this.booksRepository.find();
   }
 
-  async findOne(id: number): Promise<BookDetails | null> {
-    const book = await this.booksRepository.findOne({ where: { id } });
+  async findOne(id: number): Promise<Book> {
+    const book = await this.booksRepository.findOneBy({ id });
 
-    return book ? BookDetails.toBookDetails(book) : null;
+    if (!book) {
+      throw new NotFoundException(`Book with id ${id} not found`);
+    }
+
+    return book;
   }
 
-  async update(
-    id: number,
-    updateBookDto: BookUpdateDto,
-  ): Promise<BookItem | null> {
+  async update(id: number, updateBookDto: BookUpdateDto): Promise<Book> {
     await this.booksRepository.update(id, updateBookDto);
-    const updatedBook = await this.booksRepository.findOne({ where: { id } });
+    const updatedBook = await this.booksRepository.findOneBy({ id });
 
-    return updatedBook ? BookItem.toBookItem(updatedBook) : null;
+    if (!updatedBook) {
+      throw new NotFoundException(`Book with id ${id} not found`);
+    }
+
+    return updatedBook;
   }
 
   async remove(id: number): Promise<void> {
+    const book = await this.booksRepository.findOneBy({ id });
+
+    if (!book) {
+      throw new NotFoundException(`Book with id ${id} not found`);
+    }
+
     await this.booksRepository.delete(id);
   }
 
-  async findAvailableBooks(): Promise<BookItem[]> {
+  async findAvailableBooks(): Promise<Book[]> {
     const books = await this.booksRepository.find({
       where: { available: true },
     });
 
-    return books.map(BookItem.toBookItem);
+    return books;
   }
 }

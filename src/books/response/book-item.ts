@@ -12,11 +12,10 @@ export class BookItem {
   ean13: string;
 
   static toBookItem(book: Book): BookItem {
-    const { id, name, ean13 } = book;
     return {
       id: book.id,
       name: book.name,
-      ean13: book.ean13,
+      ean13: book.code,
     };
   }
 }
