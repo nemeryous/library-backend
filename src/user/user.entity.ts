@@ -5,13 +5,13 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class User {
+export class UserEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
   name: string;
 
-  @Column()f
+  @Column() f
   email: string;
 }

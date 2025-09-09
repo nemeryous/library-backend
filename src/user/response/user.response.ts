@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from '../user.entity';
+import { User } from '../user.domain';
 
 export class UserResponse {
   @ApiProperty()
@@ -12,15 +12,14 @@ export class UserResponse {
   email: string;
 
   static toUserResponse(user: User): UserResponse {
-    const {
-      id: userId,
-      name: userName,
-      email: userEmail,
-    } = user;
     return {
-      id: userId,
-      name: userName,
-      email: userEmail,
+
+      id: user.id,
+
+      name: user.name,
+
+      email: user.email,
+      
     };
   }
 }

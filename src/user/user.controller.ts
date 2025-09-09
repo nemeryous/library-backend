@@ -13,18 +13,16 @@ import { UserResponse } from './response/user.response';
 
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Get()
   async findAll(): Promise<UserResponse[]> {
-    return this.userService.findAll();
+    return (await this.userService.findAll()).map(UserResponse.toUserResponse);
   }
 
   @Post()
-  async create(
-    @Body() userRequestDto: UserRequestDto,
-  ): Promise<UserResponse> {
-    return this.userService.create(userRequestDto);
+  async create(@Body() userRequestDto: UserRequestDto): Promise<UserResponse> {
+    return UserResponse.toUserResponse(await this.userService.create(userRequestDto));
   }
 
   @Delete(':id')
@@ -33,17 +31,12 @@ export class UserController {
   }
 
   @Get(':id')
-  async findOne(
-    @Param('id') id: number,
-  ): Promise<UserResponse | null> {
-    return this.userService.findOne(id);
+  async findOne(@Param('id') id: number): Promise<UserResponse> {
+    return UserResponse.toUserResponse(await this.userService.findOne(id));
   }
 
   @Put(':id')
-  async update(
-    @Param('id') id: number,
-    @Body() userRequestDto: UserRequestDto,
-  ): Promise<UserResponse | null> {
-    return this.userService.update(id, userRequestDto);
+  async update(@Param('id') id: number, @Body() userRequestDto: UserRequestDto): Promise<UserResponse> {
+    return UserResponse.toUserResponse(await this.userService.update(id, userRequestDto));
   }
 }
