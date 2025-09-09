@@ -1,3 +1,1 @@
-export class BookDomain {
-    
-}
+export class BookDomain {}

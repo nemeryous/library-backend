@@ -25,6 +25,14 @@ export class BookDetails {
 
   static toBookDetails(book: Book): BookDetails {
     const { id, name, ean13, available, author, description, category } = book;
-    return { id, name, ean13, available, author, description, category };
+    return {
+      id: book.id,
+      name: book.name,
+      ean13: book.ean13,
+      available: book.available,
+      author: book.author,
+      description: book.description,
+      category: book.category,
+    };
   }
 }

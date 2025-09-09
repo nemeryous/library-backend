@@ -7,12 +7,16 @@ export class BookItem {
 
   @ApiProperty()
   name: string;
-  
+
   @ApiProperty()
   ean13: string;
 
   static toBookItem(book: Book): BookItem {
     const { id, name, ean13 } = book;
-    return { id, name, ean13 };
+    return {
+      id: book.id,
+      name: book.name,
+      ean13: book.ean13,
+    };
   }
 }
