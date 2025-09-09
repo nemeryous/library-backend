@@ -3,7 +3,7 @@ import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { UserRequestDto } from './dto/user-request.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserResponseDto } from './dto/user-response.dto';
+import { UserResponse } from './response/user.response';
 
 @Injectable()
 export class UserService {
@@ -12,42 +12,39 @@ export class UserService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async findAll(): Promise<UserResponseDto[]> {
+  async findAll(): Promise<UserResponse[]> {
     const users = await this.userRepository.find();
-    return users.map((user) => this.toResponseDto(user));
+    return users.map((user) => UserResponse.toUserResponse(user));
   }
 
-  async findOne(id: number): Promise<UserResponseDto | null> {
+  async findOne(id: number): Promise<UserResponse | null> {
     const user = await this.userRepository.findOneBy({ id });
     if (!user) {
       return null;
     }
-    return this.toResponseDto(user);
+    return UserResponse.toUserResponse(user);
   }
 
-  async create(userRequestDto: UserRequestDto): Promise<UserResponseDto> {
+  async create(userRequestDto: UserRequestDto): Promise<UserResponse> {
     const createUser = this.userRepository.create(userRequestDto);
-    return this.toResponseDto(await this.userRepository.save(createUser));
+    return UserResponse.toUserResponse(
+      await this.userRepository.save(createUser),
+    );
   }
 
   async update(
     id: number,
     userRequestDto: UserRequestDto,
-  ): Promise<UserResponseDto | null> {
+  ): Promise<UserResponse | null> {
     await this.userRepository.update(id, userRequestDto);
     const user = await this.userRepository.findOneBy({ id });
     if (!user) {
       return null;
     }
-    return this.toResponseDto(user);
+    return UserResponse.toUserResponse(user);
   }
 
   async delete(id: number): Promise<void> {
     await this.userRepository.delete(id);
-  }
-
-  private toResponseDto(user: User) {
-    const { id, name, email } = user;
-    return { id, name, email };
   }
 }
