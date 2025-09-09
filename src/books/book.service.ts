@@ -1,18 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Book } from './book.entity';
+import { BookEntity } from './book.entity';
 import { BookCreateDto } from './dto/book-create.dto';
 import { BookUpdateDto } from './dto/book-update.dto';
-import { BookItem } from './response/book-item';
-import { BookDetail } from './response/book-detail';
+import { Book } from './book.domain';
 
 @Injectable()
 export class BookService {
   constructor(
-    @InjectRepository(Book)
-    private booksRepository: Repository<Book>,
-  ) {}
+    @InjectRepository(BookEntity)
+    private readonly booksRepository: Repository<BookEntity>,
+  ) { }
 
   async generateEAN13(): Promise<string> {
     let ean = '';
@@ -34,11 +33,13 @@ export class BookService {
     const code = await this.generateEAN13();
     const book = this.booksRepository.create({ ...createBookDto, code });
 
-    return await this.booksRepository.save(book);
+    return Book.fromEntities(await this.booksRepository.save(book));
   }
 
   async findAll(): Promise<Book[]> {
-    return await this.booksRepository.find();
+    const books = await this.booksRepository.find();
+
+    return books.map(Book.fromEntities);
   }
 
   async findOne(id: number): Promise<Book> {
@@ -48,7 +49,7 @@ export class BookService {
       throw new NotFoundException(`Book with id ${id} not found`);
     }
 
-    return book;
+    return Book.fromEntities(book);
   }
 
   async update(id: number, updateBookDto: BookUpdateDto): Promise<Book> {
@@ -59,7 +60,7 @@ export class BookService {
       throw new NotFoundException(`Book with id ${id} not found`);
     }
 
-    return updatedBook;
+    return Book.fromEntities(updatedBook);
   }
 
   async remove(id: number): Promise<void> {
@@ -77,6 +78,6 @@ export class BookService {
       where: { available: true },
     });
 
-    return books;
+    return books.map(Book.fromEntities);
   }
 }

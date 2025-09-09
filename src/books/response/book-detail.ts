@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Book } from '../book.entity';
+import { Book } from '../book.domain';
 
 export class BookDetail {
   @ApiProperty()

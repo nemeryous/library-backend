@@ -16,7 +16,7 @@ import { BookDetail } from './response/book-detail';
 
 @Controller('books')
 export class BookController {
-  constructor(private readonly booksService: BookService) {}
+  constructor(private readonly booksService: BookService) { }
 
   @Get()
   async findAll(): Promise<BookItem[]> {
