@@ -1,4 +1,8 @@
 {
   "singleQuote": true,
-  "trailingComma": "all"
+  "trailingComma": "all",
+  "endOfLine": "auto",
+  "rules": {
+    "linebreak-style": ["error", "windows"]
+  }
 }
