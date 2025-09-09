@@ -11,6 +11,7 @@ import { BookService } from './book.service';
 import { BookCreateDto } from './dto/book-create.dto';
 import { BookUpdateDto } from './dto/book-update.dto';
 import { BookItem } from './response/book-item';
+import { BookDetails } from './response/book-details';
 
 @Controller('books')
 export class BookController {
@@ -32,7 +33,7 @@ export class BookController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number): Promise<BookItem | null> {
+  async findOne(@Param('id') id: number): Promise<BookDetails | null> {
     return this.booksService.findOne(id);
   }
 

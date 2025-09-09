@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Book } from './books.entity';
+import { Book } from './book.entity';
 import { BookCreateDto } from './dto/book-create.dto';
 import { BookUpdateDto } from './dto/book-update.dto';
 import { BookItem } from './response/book-item';
+import { BookDetails } from './response/book-details';
 
 @Injectable()
 export class BookService {
@@ -42,10 +43,10 @@ export class BookService {
     return books.map(BookItem.toBookItem);
   }
 
-  async findOne(id: number): Promise<BookItem | null> {
+  async findOne(id: number): Promise<BookDetails | null> {
     const book = await this.booksRepository.findOne({ where: { id } });
 
-    return book ? BookItem.toBookItem(book) : null;
+    return book ? BookDetails.toBookDetails(book) : null;
   }
 
   async update(

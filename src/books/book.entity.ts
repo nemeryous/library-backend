@@ -13,4 +13,16 @@ export class Book {
 
   @Column({ default: true })
   available: boolean;
+
+  @Column()
+  author: string;
+
+  @Column()
+  publisher: string;
+
+  @Column()
+  description: string;
+
+  @Column()
+  category: string;
 }
