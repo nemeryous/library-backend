@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Book } from '../book.domain';
+import { Book } from '../domain/book.domain';
 
-export class BookItem {
+export class BookItemDto {
   @ApiProperty()
   id: number;
 
@@ -11,11 +11,15 @@ export class BookItem {
   @ApiProperty()
   ean13: string;
 
-  static toBookItem(book: Book): BookItem {
+  static toBookItem(book: Book): BookItemDto {
     return {
       id: book.id,
       name: book.name,
       ean13: book.code,
     };
+  }
+
+  static toBookItems(books: Book[]): BookItemDto[] {
+    return books.map(this.toBookItem);
   }
 }

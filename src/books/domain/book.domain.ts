@@ -1,4 +1,4 @@
-import { BookEntity } from "./book.entity";
+import { BookEntity } from "../book.entity";
 
 export class Book {
   id: number;
@@ -10,7 +10,7 @@ export class Book {
   description: string;
   category: string;
 
-  static fromEntities(book: BookEntity): Book {
+  static fromEntity(book: BookEntity): Book {
     return {
       id: book.id,
       name: book.name,
@@ -22,4 +22,10 @@ export class Book {
       category: book.category,
     }
   }
+
+  static fromEntities(books: BookEntity[]): Book[] {
+    return books.map(this.fromEntity);
+  }
+
+
 }

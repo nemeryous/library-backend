@@ -2,22 +2,19 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class BookCreateDto {
   @ApiProperty()
-  name: string;
-
-  @ApiProperty()
-  code: string;
+  readonly name: string;
 
   @ApiProperty({ default: true })
-  available?: boolean;
+  readonly available?: boolean;
 
   @ApiProperty()
-  author: string;
+  readonly author: string;
 
   @ApiProperty()
-  publisher: string;
+  readonly publisher: string;
 
   @ApiProperty()
-  description: string;
+  readonly description: string;
 
   @ApiProperty()
   category: string;

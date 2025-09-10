@@ -11,51 +11,57 @@ import {
 import { BookService } from './book.service';
 import { BookCreateDto } from './dto/book-create.dto';
 import { BookUpdateDto } from './dto/book-update.dto';
-import { BookItem } from './response/book-item';
-import { BookDetail } from './response/book-detail';
+import { BookItemDto } from './dto/book-item.dto';
+import { BookDetailDto } from './dto/book-detail';
+import { BookCreate } from './domain/book-create';
+import { BookUpdate } from './domain/book-update';
+
 
 @Controller('books')
 export class BookController {
   constructor(private readonly booksService: BookService) { }
 
   @Get()
-  async findAll(): Promise<BookItem[]> {
-    return (await this.booksService.findAll()).map(BookItem.toBookItem);
+  async findAll(): Promise<BookItemDto[]> {
+    return BookItemDto.toBookItems(await this.booksService.findAll());
   }
 
   @Get('available')
-  async findAvailableBooks(): Promise<BookItem[]> {
-    return (await this.booksService.findAvailableBooks()).map(
-      BookItem.toBookItem,
-    );
+  async findAvailableBooks(): Promise<BookItemDto[]> {
+    return BookItemDto.toBookItems(await this.booksService.findAvailableBooks());
   }
 
   @Post()
-  async create(@Body() bookCreateDto: BookCreateDto): Promise<BookItem> {
-    return BookItem.toBookItem(await this.booksService.create(bookCreateDto));
+  async create(@Body() bookCreateDto: BookCreateDto): Promise<BookItemDto> {
+    return BookItemDto.toBookItem(
+      await this.booksService.create(
+        BookCreate.fromBookCreateDto(bookCreateDto)
+      )
+    );
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number): Promise<BookDetail> {
+  async findOne(@Param('id') id: number): Promise<BookDetailDto> {
     const book = await this.booksService.findOne(id);
 
-    return BookDetail.toBookDetails(book);
+    return BookDetailDto.toBookDetail(book);
   }
 
   @Put(':id')
   async update(
     @Param('id') id: number,
     @Body() bookUpdateDto: BookUpdateDto,
-  ): Promise<BookItem> {
-    const updatedBook = await this.booksService.update(id, bookUpdateDto);
+  ): Promise<BookItemDto> {
+    const updatedBook = await this.booksService.update(
+      id,
+      BookUpdate.fromBookUpdateDto(bookUpdateDto)
+    );
 
-    return BookItem.toBookItem(updatedBook);
+    return BookItemDto.toBookItem(updatedBook);
   }
-  q;
+
   @Delete(':id')
   async remove(@Param('id') id: number): Promise<void> {
-    const book = await this.booksService.findOne(id);
-
-    return this.booksService.remove(id);
+    await this.booksService.remove(id);
   }
 }

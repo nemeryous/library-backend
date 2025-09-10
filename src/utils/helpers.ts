@@ -5,11 +5,5 @@ export async function generateEAN13(): Promise<string> {
     ean += Math.floor(Math.random() * 10);
   }
 
-  const exists = await this.booksRepository.findOne({
-    where: { code: ean },
-  });
-
-  if (exists) return this.generateEAN13();
-
   return ean;
 }
