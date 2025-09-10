@@ -1,14 +1,21 @@
-import { BookEntity } from "../entity/book.entity";
+import { BookEntity } from '../entity/book.entity';
 
 export class Book {
-  id: number;
-  name: string;
-  code: string;
-  available: boolean;
-  author: string;
-  publisher: string;
-  description: string;
-  category: string;
+  readonly id: number;
+
+  readonly name: string;
+
+  readonly code: string;
+
+  readonly available: boolean;
+
+  readonly author: string;
+
+  readonly publisher: string;
+
+  readonly description: string;
+
+  readonly category: string;
 
   static fromEntity(book: BookEntity): Book {
     return {
@@ -20,10 +27,10 @@ export class Book {
       publisher: book.publisher,
       description: book.description,
       category: book.category,
-    }
+    };
   }
 
   static fromEntities(books: BookEntity[]): Book[] {
-    return books.map(this.fromEntity);
+    return books.map((e) => this.fromEntity(e));
   }
 }

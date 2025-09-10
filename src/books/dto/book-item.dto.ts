@@ -20,6 +20,6 @@ export class BookItemDto {
   }
 
   static fromBooks(books: Book[]): BookItemDto[] {
-    return books.map(this.fromBook);
+    return books.map((e) => this.fromBook(e));
   }
 }

@@ -15,12 +15,11 @@ export class BookService {
   ) {}
 
   async create(bookCreate: BookCreate): Promise<Book> {
-    const ean = await this.generateUniqueEAN13();
     return Book.fromEntity(
       await this.bookRepository.save(
         this.bookRepository.create({
           ...BookCreate.toEntity(bookCreate),
-          code: ean,
+          code: await this.generateUniqueEAN13(),
         }),
       ),
     );
@@ -35,15 +34,16 @@ export class BookService {
   }
 
   async update(id: number, bookUpdate: BookUpdate): Promise<Book> {
-    const updatedBook = this.bookRepository.save({
-      ...this.findOneOrThrow(id),
-      ...BookUpdate.toEntity(bookUpdate),
-    });
-    return Book.fromEntity(await updatedBook);
+    return Book.fromEntity(
+      await this.bookRepository.save({
+        ...this.findOneOrThrow(id),
+        ...BookUpdate.toEntity(bookUpdate),
+      }),
+    );
   }
 
   async remove(id: number): Promise<void> {
-    await this.bookRepository.delete(await this.findOneOrThrow(id));
+    await this.bookRepository.remove(await this.findOneOrThrow(id));
   }
 
   async findAvailableBooks(): Promise<Book[]> {
@@ -55,15 +55,10 @@ export class BookService {
   }
 
   private async generateUniqueEAN13(): Promise<string> {
-    let ean: string;
-    let exists: BookEntity | null;
+    const code = await generateEAN13();
+    const existing = await this.bookRepository.findOneBy({ code });
 
-    do {
-      ean = await generateEAN13();
-      exists = await this.bookRepository.findOne({ where: { code: ean } });
-    } while (exists);
-
-    return ean;
+    return existing ? this.generateUniqueEAN13() : code;
   }
 
   private async findOneOrThrow(id: number): Promise<BookEntity> {

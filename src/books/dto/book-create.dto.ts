@@ -5,7 +5,7 @@ export class BookCreateDto {
   @ApiProperty()
   readonly name: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   readonly available?: boolean;
 
   @ApiProperty()
@@ -18,7 +18,7 @@ export class BookCreateDto {
   readonly description: string;
 
   @ApiProperty()
-  category: string;
+  readonly category: string;
 
   static toBookCreate(bookCreateDto: BookCreateDto): BookCreate {
     return {

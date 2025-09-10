@@ -45,12 +45,12 @@ export class BookController {
     @Param('id') id: number,
     @Body() bookUpdateDto: BookUpdateDto,
   ): Promise<BookItemDto> {
-    const updatedBook = await this.bookService.update(
-      id,
-      BookUpdateDto.toBookUpdate(bookUpdateDto),
+    return BookItemDto.fromBook(
+      await this.bookService.update(
+        id,
+        BookUpdateDto.toBookUpdate(bookUpdateDto),
+      ),
     );
-
-    return BookItemDto.fromBook(updatedBook);
   }
 
   @Delete(':id')
