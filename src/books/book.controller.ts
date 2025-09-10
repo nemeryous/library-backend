@@ -16,28 +16,28 @@ import { BookDetailDto } from './dto/book-detail.dto';
 
 @Controller('books')
 export class BookController {
-  constructor(private readonly booksService: BookService) {}
+  constructor(private readonly bookService: BookService) {}
 
   @Get()
   async findAll(): Promise<BookItemDto[]> {
-    return BookItemDto.fromBooks(await this.booksService.findAll());
+    return BookItemDto.fromBooks(await this.bookService.findAll());
   }
 
   @Get('available')
   async findAvailableBooks(): Promise<BookItemDto[]> {
-    return BookItemDto.fromBooks(await this.booksService.findAvailableBooks());
+    return BookItemDto.fromBooks(await this.bookService.findAvailableBooks());
   }
 
   @Post()
   async create(@Body() bookCreateDto: BookCreateDto): Promise<BookItemDto> {
     return BookItemDto.fromBook(
-      await this.booksService.create(BookCreateDto.toBookCreate(bookCreateDto)),
+      await this.bookService.create(BookCreateDto.toBookCreate(bookCreateDto)),
     );
   }
 
   @Get(':id')
   async findOne(@Param('id') id: number): Promise<BookDetailDto> {
-    return BookDetailDto.fromBook(await this.booksService.findOne(id));
+    return BookDetailDto.fromBook(await this.bookService.findOne(id));
   }
 
   @Put(':id')
@@ -45,7 +45,7 @@ export class BookController {
     @Param('id') id: number,
     @Body() bookUpdateDto: BookUpdateDto,
   ): Promise<BookItemDto> {
-    const updatedBook = await this.booksService.update(
+    const updatedBook = await this.bookService.update(
       id,
       BookUpdateDto.toBookUpdate(bookUpdateDto),
     );
@@ -55,6 +55,6 @@ export class BookController {
 
   @Delete(':id')
   async remove(@Param('id') id: number): Promise<void> {
-    await this.booksService.remove(id);
+    await this.bookService.remove(id);
   }
 }

@@ -1,4 +1,4 @@
-import { BookEntity } from '../book.entity';
+import { BookEntity } from '../entity/book.entity';
 import { BookUpdateDto } from '../dto/book-update.dto';
 
 export class BookUpdate {

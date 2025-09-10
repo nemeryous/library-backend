@@ -1,4 +1,4 @@
-import { BookEntity } from '../book.entity';
+import { BookEntity } from '../entity/book.entity';
 
 export class BookCreate {
   readonly name: string;
@@ -16,7 +16,7 @@ export class BookCreate {
   static toEntity(bookCreate: BookCreate): Partial<BookEntity> {
     return {
       name: bookCreate.name,
-      available: bookCreate.available ?? true,
+      available: bookCreate.available,
       author: bookCreate.author,
       publisher: bookCreate.publisher,
       description: bookCreate.description,

@@ -5,7 +5,7 @@ export class BookCreateDto {
   @ApiProperty()
   readonly name: string;
 
-  @ApiProperty({ default: true })
+  @ApiProperty()
   readonly available?: boolean;
 
   @ApiProperty()

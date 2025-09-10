@@ -1,4 +1,4 @@
-import { BookEntity } from "../book.entity";
+import { BookEntity } from "../entity/book.entity";
 
 export class Book {
   id: number;
