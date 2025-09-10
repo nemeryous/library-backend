@@ -11,19 +11,17 @@ export class UserResponse {
   @ApiProperty()
   email: string;
 
-  static toUserResponse(user: User): UserResponse {
+  static fromUser(user: User): UserResponse {
     return {
-
       id: user.id,
 
       name: user.name,
 
       email: user.email,
-
     };
   }
 
-  static toUserResponses(users: User[]): UserResponse[] {
-    return users.map(this.toUserResponse);
+  static fromUsers(users: User[]): UserResponse[] {
+    return users.map(this.fromUser);
   }
 }

@@ -1,65 +1,52 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { UserEntity } from './user.entity';
+import { UserEntity } from './entity/user.entity';
 import { UserRequestDto } from './dto/user-request.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './domain/user.domain';
+import { UserRequest } from './domain/user-request';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
-  ) { }
+  ) {}
 
   async findAll(): Promise<User[]> {
-    const users = await this.userRepository.find();
-
-    return User.fromEntities(users);
+    return User.fromEntities(await this.userRepository.find());
   }
 
   async findOne(id: number): Promise<User> {
-    const user = await this.userRepository.findOneBy({
-      id,
+    return User.fromEntity(await this.findOneOrThrow(id));
+  }
+
+  async create(userRequest: UserRequest): Promise<User> {
+    return User.fromEntity(
+      await this.userRepository.save(
+        this.userRepository.create(UserRequest.toEntity(userRequest)),
+      ),
+    );
+  }
+
+  async update(id: number, userRequest: UserRequest): Promise<User> {
+    const updatedUser = this.userRepository.save({
+      ...(await this.findOneOrThrow(id)),
+      ...UserRequest.toEntity(userRequest),
     });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    return User.fromEntity(user);
-  }
 
-  async create(
-    userRequestDto: UserRequestDto,
-  ): Promise<User> {
-    const createUser = this.userRepository.create(userRequestDto);
-
-    return User.fromEntity(await this.userRepository.save(createUser));
-  }
-
-  async update(
-    id: number,
-    userRequestDto: UserRequestDto,
-  ): Promise<User> {
-    await this.userRepository.update(id, userRequestDto);
-
-    const user = await this.userRepository.findOneBy({ id });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    return User.fromEntity(user);
+    return User.fromEntity(await updatedUser);
   }
 
   async delete(id: number): Promise<void> {
+    await this.userRepository.delete(await this.findOneOrThrow(id));
+  }
+
+  private async findOneOrThrow(id: number): Promise<UserEntity> {
     const user = await this.userRepository.findOneBy({ id });
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
-    await this.userRepository.delete(id);
+    return user;
   }
 }
