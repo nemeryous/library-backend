@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserRequestDto } from './dto/user-request.dto';
-import { UserResponse } from './response/user.response';
+import { UserResponse } from './domain/user.response';
 
 @Controller('users')
 export class UserController {
@@ -17,7 +17,7 @@ export class UserController {
 
   @Get()
   async findAll(): Promise<UserResponse[]> {
-    return (await this.userService.findAll()).map(UserResponse.toUserResponse);
+    return UserResponse.toUserResponses(await this.userService.findAll());
   }
 
   @Post()

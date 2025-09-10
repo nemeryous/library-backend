@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from '../user.domain';
+import { User } from './user.domain';
 
 export class UserResponse {
   @ApiProperty()
@@ -19,7 +19,11 @@ export class UserResponse {
       name: user.name,
 
       email: user.email,
-      
+
     };
+  }
+
+  static toUserResponses(users: User[]): UserResponse[] {
+    return users.map(this.toUserResponse);
   }
 }
