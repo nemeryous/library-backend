@@ -23,7 +23,7 @@ export class BookDetailDto {
   @ApiProperty()
   category: string;
 
-  static toBookDetail(book: Book): BookDetailDto {
+  static fromBook(book: Book): BookDetailDto {
     return {
       id: book.id,
       name: book.name,

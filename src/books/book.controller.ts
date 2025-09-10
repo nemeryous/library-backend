@@ -12,39 +12,32 @@ import { BookService } from './book.service';
 import { BookCreateDto } from './dto/book-create.dto';
 import { BookUpdateDto } from './dto/book-update.dto';
 import { BookItemDto } from './dto/book-item.dto';
-import { BookDetailDto } from './dto/book-detail';
-import { BookCreate } from './domain/book-create';
-import { BookUpdate } from './domain/book-update';
-
+import { BookDetailDto } from './dto/book-detail.dto';
 
 @Controller('books')
 export class BookController {
-  constructor(private readonly booksService: BookService) { }
+  constructor(private readonly booksService: BookService) {}
 
   @Get()
   async findAll(): Promise<BookItemDto[]> {
-    return BookItemDto.toBookItems(await this.booksService.findAll());
+    return BookItemDto.fromBooks(await this.booksService.findAll());
   }
 
   @Get('available')
   async findAvailableBooks(): Promise<BookItemDto[]> {
-    return BookItemDto.toBookItems(await this.booksService.findAvailableBooks());
+    return BookItemDto.fromBooks(await this.booksService.findAvailableBooks());
   }
 
   @Post()
   async create(@Body() bookCreateDto: BookCreateDto): Promise<BookItemDto> {
-    return BookItemDto.toBookItem(
-      await this.booksService.create(
-        BookCreate.fromBookCreateDto(bookCreateDto)
-      )
+    return BookItemDto.fromBook(
+      await this.booksService.create(BookCreateDto.toBookCreate(bookCreateDto)),
     );
   }
 
   @Get(':id')
   async findOne(@Param('id') id: number): Promise<BookDetailDto> {
-    const book = await this.booksService.findOne(id);
-
-    return BookDetailDto.toBookDetail(book);
+    return BookDetailDto.fromBook(await this.booksService.findOne(id));
   }
 
   @Put(':id')
@@ -54,10 +47,10 @@ export class BookController {
   ): Promise<BookItemDto> {
     const updatedBook = await this.booksService.update(
       id,
-      BookUpdate.fromBookUpdateDto(bookUpdateDto)
+      BookUpdateDto.toBookUpdate(bookUpdateDto),
     );
 
-    return BookItemDto.toBookItem(updatedBook);
+    return BookItemDto.fromBook(updatedBook);
   }
 
   @Delete(':id')

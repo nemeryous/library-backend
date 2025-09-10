@@ -11,7 +11,7 @@ export class BookItemDto {
   @ApiProperty()
   ean13: string;
 
-  static toBookItem(book: Book): BookItemDto {
+  static fromBook(book: Book): BookItemDto {
     return {
       id: book.id,
       name: book.name,
@@ -19,7 +19,7 @@ export class BookItemDto {
     };
   }
 
-  static toBookItems(books: Book[]): BookItemDto[] {
-    return books.map(this.toBookItem);
+  static fromBooks(books: Book[]): BookItemDto[] {
+    return books.map(this.fromBook);
   }
 }

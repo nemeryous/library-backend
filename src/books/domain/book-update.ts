@@ -1,4 +1,5 @@
-import { BookUpdateDto } from "../dto/book-update.dto";
+import { BookEntity } from '../book.entity';
+import { BookUpdateDto } from '../dto/book-update.dto';
 
 export class BookUpdate {
   readonly name?: string;
@@ -13,14 +14,14 @@ export class BookUpdate {
 
   readonly category?: string;
 
-  static fromBookUpdateDto(bookUpdateDto: BookUpdateDto): BookUpdate {
+  static toEntity(bookUpdate: BookUpdate): Partial<BookEntity> {
     return {
-      name: bookUpdateDto.name,
-      available: bookUpdateDto.available,
-      author: bookUpdateDto.author,
-      publisher: bookUpdateDto.publisher,
-      description: bookUpdateDto.description,
-      category: bookUpdateDto.category,
-    }
+      name: bookUpdate.name,
+      available: bookUpdate.available,
+      author: bookUpdate.author,
+      publisher: bookUpdate.publisher,
+      description: bookUpdate.description,
+      category: bookUpdate.category,
+    };
   }
 }

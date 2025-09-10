@@ -26,6 +26,4 @@ export class Book {
   static fromEntities(books: BookEntity[]): Book[] {
     return books.map(this.fromEntity);
   }
-
-
 }

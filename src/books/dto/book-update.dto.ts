@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { BookUpdate } from '../domain/book-update';
 
 export class BookUpdateDto {
   @ApiProperty({ required: false })
@@ -18,4 +19,15 @@ export class BookUpdateDto {
 
   @ApiProperty({ required: false })
   readonly category?: string;
+
+  static toBookUpdate(bookUpdateDto: BookUpdateDto): BookUpdate {
+    return {
+      name: bookUpdateDto.name,
+      available: bookUpdateDto.available,
+      author: bookUpdateDto.author,
+      publisher: bookUpdateDto.publisher,
+      description: bookUpdateDto.description,
+      category: bookUpdateDto.category,
+    };
+  }
 }

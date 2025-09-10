@@ -1,4 +1,4 @@
-import { BookCreateDto } from "../dto/book-create.dto";
+import { BookEntity } from '../book.entity';
 
 export class BookCreate {
   readonly name: string;
@@ -13,15 +13,14 @@ export class BookCreate {
 
   readonly category: string;
 
-  static fromBookCreateDto(bookCreateDto: BookCreateDto): BookCreate {
-
+  static toEntity(bookCreate: BookCreate): Partial<BookEntity> {
     return {
-      name: bookCreateDto.name,
-      available: bookCreateDto.available,
-      author: bookCreateDto.author,
-      publisher: bookCreateDto.publisher,
-      description: bookCreateDto.description,
-      category: bookCreateDto.category,
+      name: bookCreate.name,
+      available: bookCreate.available ?? true,
+      author: bookCreate.author,
+      publisher: bookCreate.publisher,
+      description: bookCreate.description,
+      category: bookCreate.category,
     };
   }
 }
