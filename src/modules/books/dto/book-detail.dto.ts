@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Book } from '../domain/book.domain';
+import { Book } from '@book/domain/book';
 
 export class BookDetailDto {
   @ApiProperty()
@@ -9,7 +9,7 @@ export class BookDetailDto {
   name: string;
 
   @ApiProperty()
-  ean13: string;
+  code: string;
 
   @ApiProperty()
   available: boolean;
@@ -27,7 +27,7 @@ export class BookDetailDto {
     return {
       id: book.id,
       name: book.name,
-      ean13: book.code,
+      code: book.code,
       available: book.available,
       author: book.author,
       description: book.description,

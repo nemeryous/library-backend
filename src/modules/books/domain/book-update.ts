@@ -1,5 +1,4 @@
-import { BookEntity } from '../entity/book.entity';
-import { BookUpdateDto } from '../dto/book-update.dto';
+import { BookEntity } from '@book/entity/book.entity';
 
 export class BookUpdate {
   readonly name?: string;

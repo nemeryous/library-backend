@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { BookCreate } from '../domain/book-create';
+import { BookCreate } from '@book/domain/book-create';
 
 export class BookCreateDto {
   @ApiProperty()

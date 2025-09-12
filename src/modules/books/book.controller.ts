@@ -6,13 +6,12 @@ import {
   Param,
   Post,
   Put,
-  NotFoundException,
 } from '@nestjs/common';
-import { BookService } from './book.service';
-import { BookCreateDto } from './dto/book-create.dto';
-import { BookUpdateDto } from './dto/book-update.dto';
-import { BookItemDto } from './dto/book-item.dto';
-import { BookDetailDto } from './dto/book-detail.dto';
+import { BookService } from '@book/book.service';
+import { BookCreateDto } from '@book/dto/book-create.dto';
+import { BookUpdateDto } from '@book/dto/book-update.dto';
+import { BookItemDto } from '@book/dto/book-item.dto';
+import { BookDetailDto } from '@book/dto/book-detail.dto';
 
 @Controller('books')
 export class BookController {

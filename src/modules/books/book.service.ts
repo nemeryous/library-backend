@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { BookEntity } from './entity/book.entity';
+import { BookEntity } from '@book/entity/book.entity';
+import { BookCreate } from '@book/domain/book-create';
+import { Book } from '@book/domain/book';
+import { BookUpdate } from '@book/domain/book-update';
 import { generateEAN13 } from 'src/utils/helpers';
-import { Book } from './domain/book.domain';
-import { BookCreate } from './domain/book-create';
-import { BookUpdate } from './domain/book-update';
 
 @Injectable()
 export class BookService {
@@ -36,7 +36,7 @@ export class BookService {
   async update(id: number, bookUpdate: BookUpdate): Promise<Book> {
     return Book.fromEntity(
       await this.bookRepository.save({
-        ...this.findOneOrThrow(id),
+        ...(await this.findOneOrThrow(id)),
         ...BookUpdate.toEntity(bookUpdate),
       }),
     );
@@ -55,7 +55,7 @@ export class BookService {
   }
 
   private async generateUniqueEAN13(): Promise<string> {
-    const code = await generateEAN13();
+    const code = generateEAN13();
     const existing = await this.bookRepository.findOneBy({ code });
 
     return existing ? this.generateUniqueEAN13() : code;
@@ -63,6 +63,7 @@ export class BookService {
 
   private async findOneOrThrow(id: number): Promise<BookEntity> {
     const book = await this.bookRepository.findOneBy({ id });
+
     if (!book) {
       throw new NotFoundException(`Book with id ${id} not found`);
     }

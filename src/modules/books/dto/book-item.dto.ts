@@ -1,5 +1,5 @@
+import { Book } from '@book/domain/book';
 import { ApiProperty } from '@nestjs/swagger';
-import { Book } from '../domain/book.domain';
 
 export class BookItemDto {
   @ApiProperty()
@@ -9,13 +9,13 @@ export class BookItemDto {
   name: string;
 
   @ApiProperty()
-  ean13: string;
+  code: string;
 
   static fromBook(book: Book): BookItemDto {
     return {
       id: book.id,
       name: book.name,
-      ean13: book.code,
+      code: book.code,
     };
   }
 
