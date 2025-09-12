@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { BookEntity } from '@book/entity/book.entity';
-import { BookCreate } from '@book/domain/book-create';
-import { Book } from '@book/domain/book';
-import { BookUpdate } from '@book/domain/book-update';
+import { BookEntity } from './entity/book.entity';
+import { BookCreate } from './domain/book-create';
+import { Book } from './domain/book';
+import { BookUpdate } from './domain/book-update';
 import { generateEAN13 } from 'src/utils/helpers';
 
 @Injectable()
