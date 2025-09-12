@@ -3,9 +3,11 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { BookModule } from './modules/book/book.module';
 
 @Module({
   imports: [
+    BookModule,
     ConfigModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -15,7 +17,7 @@ import { ConfigModule } from '@nestjs/config';
       password: process.env.TZ_DB_PASSWORD || '123456',
       database: process.env.TZ_DB_DATABASE,
       autoLoadEntities: true,
-      synchronize: true, // Chỉ dùng ở môi trường dev
+      synchronize: true,
     }),
   ],
   controllers: [AppController],
