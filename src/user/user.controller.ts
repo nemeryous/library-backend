@@ -9,20 +9,22 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserRequestDto } from './dto/user-request.dto';
-import { UserResponse } from './domain/user.response';
+import { UserResponseDto } from './dto/user.response.dto';
 
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  async findAll(): Promise<UserResponse[]> {
-    return UserResponse.fromUsers(await this.userService.findAll());
+  async findAll(): Promise<UserResponseDto[]> {
+    return UserResponseDto.fromUsers(await this.userService.findAll());
   }
 
   @Post()
-  async create(@Body() userRequestDto: UserRequestDto): Promise<UserResponse> {
-    return UserResponse.fromUser(
+  async create(
+    @Body() userRequestDto: UserRequestDto,
+  ): Promise<UserResponseDto> {
+    return UserResponseDto.fromUser(
       await this.userService.create(
         UserRequestDto.toUserRequest(userRequestDto),
       ),
@@ -35,16 +37,16 @@ export class UserController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number): Promise<UserResponse> {
-    return UserResponse.fromUser(await this.userService.findOne(id));
+  async findOne(@Param('id') id: number): Promise<UserResponseDto> {
+    return UserResponseDto.fromUser(await this.userService.findOne(id));
   }
 
   @Put(':id')
   async update(
     @Param('id') id: number,
     @Body() userRequestDto: UserRequestDto,
-  ): Promise<UserResponse> {
-    return UserResponse.fromUser(
+  ): Promise<UserResponseDto> {
+    return UserResponseDto.fromUser(
       await this.userService.update(
         id,
         UserRequestDto.toUserRequest(userRequestDto),

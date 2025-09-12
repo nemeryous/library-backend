@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from './user.domain';
+import { User } from '../domain/user.domain';
 
-export class UserResponse {
+export class UserResponseDto {
   @ApiProperty()
   id: number;
 
@@ -11,7 +11,7 @@ export class UserResponse {
   @ApiProperty()
   email: string;
 
-  static fromUser(user: User): UserResponse {
+  static fromUser(user: User): UserResponseDto {
     return {
       id: user.id,
 
@@ -21,7 +21,7 @@ export class UserResponse {
     };
   }
 
-  static fromUsers(users: User[]): UserResponse[] {
+  static fromUsers(users: User[]): UserResponseDto[] {
     return users.map(this.fromUser);
   }
 }
