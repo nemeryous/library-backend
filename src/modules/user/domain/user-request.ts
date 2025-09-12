@@ -1,5 +1,4 @@
-import { UserEntity } from '../entity/user.entity';
-
+import { UserEntity } from '@user/entity/user.entity';
 export class UserRequest {
   readonly name: string;
   readonly email: string;
