@@ -1,3 +1,4 @@
+import { UserModule } from './modules/user/user.module';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -7,6 +8,7 @@ import { BookModule } from './modules/book/book.module';
 
 @Module({
   imports: [
+    UserModule,
     BookModule,
     ConfigModule.forRoot(),
     TypeOrmModule.forRoot({
