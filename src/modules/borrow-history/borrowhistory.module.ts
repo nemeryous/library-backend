@@ -1,0 +1,15 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { BorrowHistoryEntity } from './entity/borrow-history.entity';
+import { BookEntity } from '../book/entity/book.entity';
+import { UserEntity } from '../user/entity/user.entity';
+import { BorrowHistoryController } from './borrowhistory.controller';
+import { BorrowHistoryService } from './borrowhistory.service';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([BorrowHistoryEntity, BookEntity, UserEntity])],
+  controllers: [BorrowHistoryController],
+  providers: [BorrowHistoryService],
+  exports: [BorrowHistoryService],
+})
+export class BorrowHistoryModule {}
