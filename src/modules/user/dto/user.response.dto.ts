@@ -14,9 +14,7 @@ export class UserResponseDto {
   static fromUser(user: User): UserResponseDto {
     return {
       id: user.id,
-
       name: user.name,
-
       email: user.email,
     };
   }
