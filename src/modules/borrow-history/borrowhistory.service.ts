@@ -39,6 +39,8 @@ export class BorrowHistoryService {
       this.borrowHistoryRepository.create({
         book,
         user,
+        bookId: book.id,
+        userId: user.id,
         borrowDate: new Date(),
       }),
     );
@@ -48,7 +50,7 @@ export class BorrowHistoryService {
     return BorrowHistory.fromEntity(entity);
   }
 
-  async returnBook(id: number): Promise<BorrowHistory> {
+  async remove(id: number): Promise<BorrowHistory> {
     const entity = await this.findOneOrThrow(id);
 
     if (entity.status === BorrowStatusEnum.RETURNED) {

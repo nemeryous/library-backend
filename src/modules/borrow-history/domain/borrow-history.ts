@@ -1,12 +1,14 @@
 import { BorrowStatusEnum } from 'src/utils/BorrowStatusEnum';
 import { BorrowHistoryEntity } from '../entity/borrow-history.entity';
+import { User } from 'src/modules/user/domain/user';
+import { Book } from 'src/modules/book/domain/book';
 
 export class BorrowHistory {
   readonly id: number;
 
-  readonly userId: number;
+  readonly user: User;
 
-  readonly bookId: number;
+  readonly book: Book;
 
   readonly borrowDate: Date;
 
@@ -17,8 +19,8 @@ export class BorrowHistory {
   static fromEntity(entity: BorrowHistoryEntity): BorrowHistory {
     return {
       id: entity.id,
-      userId: entity.user.id,
-      bookId: entity.book.id,
+      user: User.fromEntity(entity.user),
+      book: Book.fromEntity(entity.book),
       borrowDate: entity.borrowDate,
       returnDate: entity.returnDate,
       status: entity.status,
