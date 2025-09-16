@@ -8,9 +8,7 @@ export class User {
   static fromEntity(user: UserEntity): User {
     return {
       id: user.id,
-
       name: user.name,
-
       email: user.email,
     };
   }
