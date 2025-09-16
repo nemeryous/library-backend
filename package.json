@@ -4,8 +4,7 @@
   "description": "",
   "author": "",
   "private": true,
-  "license": "UNLICENSED",
-  "scripts": {
+  "license": "UNLICENSED",  "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
@@ -28,8 +27,7 @@
     "@nestjs/typeorm": "^11.0.0",
     "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1",
-    "typeorm": "^0.3.26"
+    "rxjs": "^7.8.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -54,6 +52,7 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.2",
+    "typeorm": "^0.3.26",
     "typescript-eslint": "^8.20.0"
   },
   "jest": {
