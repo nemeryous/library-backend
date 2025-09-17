@@ -13,6 +13,7 @@ import { BorrowHistoryDto } from './dto/borrow-history.dto';
 import { BorrowBookDto } from './dto/borrow-book.dto';
 import { BookItemDto } from '../book/dto/book-item.dto';
 import { BorrowHistory } from './domain/borrow-history';
+import { BookDetailDto } from '../book/dto/book-detail.dto';
 
 @Controller('borrow-history')
 export class BorrowHistoryController {
@@ -47,6 +48,15 @@ export class BorrowHistoryController {
       available,
       borrowHistories: BorrowHistoryDto.fromBorrowHistories(borrowHistories),
     };
+  }
+
+  @Get('borrowed-books-by-user/:userId')
+  async getBorrowedBooksByUser(
+    @Param('userId') userId: number,
+  ): Promise<BookItemDto[]> {
+    return BookDetailDto.fromBooks(
+      await this.borrowHistoryService.getBorrowedBooksByUser(userId),
+    );
   }
 
   @Delete('return/:id')

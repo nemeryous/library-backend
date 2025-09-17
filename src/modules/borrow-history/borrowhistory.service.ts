@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BorrowHistoryEntity } from './entity/borrow-history.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { BorrowHistory } from './domain/borrow-history';
 import { BorrowBook } from './domain/borrow-book.';
 import { BookEntity } from '../book/entity/book.entity';
@@ -104,6 +104,21 @@ export class BorrowHistoryService {
     }
 
     return entity;
+  }
+
+  async getBorrowedBooksByUser(userId: number): Promise<Book[]> {
+    const borrowHistoryEntities = await this.borrowHistoryRepository.find({
+      where: { userId, status: BorrowStatusEnum.BORROWED },
+      relations: ['book'],
+    });
+
+    if (borrowHistoryEntities.length === 0) {
+      return [];
+    }
+
+    return await this.bookRepository.findBy({
+      id: In(borrowHistoryEntities.map((bh) => bh.bookId)),
+    });
   }
 
   private async findBookOrThrow(id: number): Promise<BookEntity> {

@@ -34,4 +34,8 @@ export class BookDetailDto {
       category: book.category,
     };
   }
+
+  static fromBooks(books: Book[]): BookDetailDto[] {
+    return books.map((book) => this.fromBook(book));
+  }
 }
