@@ -32,7 +32,7 @@ export class BorrowHistoryDto {
     };
   }
 
-  static fromBorowHistories(
+  static fromBorrowHistories(
     borrowHistories: BorrowHistory[],
   ): BorrowHistoryDto[] {
     return borrowHistories.map((e) => this.fromBorrowHistory(e));

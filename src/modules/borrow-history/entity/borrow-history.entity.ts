@@ -15,6 +15,12 @@ export class BorrowHistoryEntity {
   @PrimaryGeneratedColumn()
   readonly id: number;
 
+  @Column()
+  readonly userId: number;
+
+  @Column()
+  readonly bookId: number;
+
   @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'userId' })
   readonly user: UserEntity;

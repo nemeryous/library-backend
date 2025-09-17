@@ -7,6 +7,7 @@ import { BorrowBook } from './domain/borrow-book.';
 import { BookEntity } from '../book/entity/book.entity';
 import { UserEntity } from '../user/entity/user.entity';
 import { BorrowStatusEnum } from 'src/utils/BorrowStatusEnum';
+import { Book } from '../book/domain/book';
 
 @Injectable()
 export class BorrowHistoryService {
@@ -37,10 +38,10 @@ export class BorrowHistoryService {
 
     const entity = await this.borrowHistoryRepository.save(
       this.borrowHistoryRepository.create({
-        book,
         user,
-        bookId: book.id,
+        book,
         userId: user.id,
+        bookId: book.id,
         borrowDate: new Date(),
       }),
     );
@@ -73,6 +74,26 @@ export class BorrowHistoryService {
     return BorrowHistory.fromEntity(updatedEntity);
   }
 
+  async getBorrowHistoryByCodeEan13(
+    code: string,
+  ): Promise<{ available: boolean; borrowHistories: BorrowHistory[] }> {
+    const bookEntity = await this.bookRepository.findOneBy({ code });
+
+    if (!bookEntity) {
+      throw new NotFoundException(`Book with code ${code} not found`);
+    }
+
+    const borrowHistoryEntities = await this.borrowHistoryRepository.find({
+      where: { bookId: bookEntity.id },
+      relations: ['user', 'book'],
+      order: { borrowDate: 'DESC' },
+    });
+
+    return {
+      available: bookEntity.available,
+      borrowHistories: BorrowHistory.fromEntities(borrowHistoryEntities),
+    };
+  }
   private async findOneOrThrow(id: number): Promise<BorrowHistoryEntity> {
     const entity = await this.borrowHistoryRepository.findOne({
       where: { id },
