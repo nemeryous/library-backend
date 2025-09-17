@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Like, Repository } from 'typeorm';
+import { ILike, Like, Repository } from 'typeorm';
 import { BookEntity } from './entity/book.entity';
 import { BookCreate } from './domain/book-create';
 import { Book } from './domain/book';
@@ -57,7 +57,7 @@ export class BookService {
   async findAvailableBooksByName(name: string): Promise<Book[]> {
     return Book.fromEntities(
       await this.bookRepository.findBy({
-        name: Like(`%${name}%`),
+        name: ILike(`%${name}%`),
         available: true,
       }),
     );
