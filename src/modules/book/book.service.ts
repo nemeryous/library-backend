@@ -46,10 +46,13 @@ export class BookService {
     await this.bookRepository.remove(await this.findOneOrThrow(id));
   }
 
-  async findAvailableBooks(): Promise<Book[]> {
+  async findAvailableBooks(searchName?: string): Promise<Book[]> {
     return Book.fromEntities(
       await this.bookRepository.findBy({
         available: true,
+        ...(searchName && {
+          name: ILike(`%${searchName}%`),
+        }),
       }),
     );
   }
