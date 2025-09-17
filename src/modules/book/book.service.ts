@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, Like, Repository } from 'typeorm';
 import { BookEntity } from './entity/book.entity';
 import { BookCreate } from './domain/book-create';
 import { Book } from './domain/book';
@@ -46,10 +46,13 @@ export class BookService {
     await this.bookRepository.remove(await this.findOneOrThrow(id));
   }
 
-  async findAvailableBooks(): Promise<Book[]> {
+  async findAvailableBooks(searchName?: string): Promise<Book[]> {
     return Book.fromEntities(
       await this.bookRepository.findBy({
         available: true,
+        ...(searchName && {
+          name: ILike(`%${searchName}%`),
+        }),
       }),
     );
   }

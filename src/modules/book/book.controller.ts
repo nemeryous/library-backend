@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { BookService } from './book.service';
 import { BookCreateDto } from './dto/book-create.dto';
@@ -23,8 +24,12 @@ export class BookController {
   }
 
   @Get('available')
-  async findAvailableBooks(): Promise<BookItemDto[]> {
-    return BookItemDto.fromBooks(await this.bookService.findAvailableBooks());
+  async findAvailableBooks(
+    @Query('name') name?: string,
+  ): Promise<BookItemDto[]> {
+    return BookItemDto.fromBooks(
+      await this.bookService.findAvailableBooks(name),
+    );
   }
 
   @Post()
