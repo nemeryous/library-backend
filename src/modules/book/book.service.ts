@@ -57,15 +57,6 @@ export class BookService {
     );
   }
 
-  async findAvailableBooksByName(name: string): Promise<Book[]> {
-    return Book.fromEntities(
-      await this.bookRepository.findBy({
-        name: ILike(`%${name}%`),
-        available: true,
-      }),
-    );
-  }
-
   private async generateUniqueEAN13(): Promise<string> {
     const code = generateEAN13();
     const existing = await this.bookRepository.findOneBy({ code });
