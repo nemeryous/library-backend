@@ -39,6 +39,14 @@ export class BookController {
     return BookDetailDto.fromBook(await this.bookService.findOne(id));
   }
 
+  @Get('available-books/:name')
+  async getAvailableBooksByName(
+    @Param('name') name: string,
+  ): Promise<BookItemDto[]> {
+    const books = await this.bookService.findAvailableBooksByName(name);
+    return BookItemDto.fromBooks(books);
+  }
+
   @Put(':id')
   async update(
     @Param('id') id: number,
