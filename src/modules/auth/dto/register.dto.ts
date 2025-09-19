@@ -1,20 +1,20 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
-import { Login } from '../domain/login';
+import { Register } from '../domain/register';
 
-export class LoginDto {
-  @IsEmail()
+export class RegisterDto {
   @IsNotEmpty()
-  @ApiProperty()
+  readonly name: string;
+
+  @IsEmail()
   readonly email: string;
 
   @IsNotEmpty()
   @MinLength(6)
-  @ApiProperty()
   readonly password: string;
 
-  static toLogin(dto: LoginDto): Login {
+  static toRegister(dto: RegisterDto): Register {
     return {
+      name: dto.name,
       email: dto.email,
       password: dto.password,
     };

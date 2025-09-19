@@ -8,10 +8,14 @@ export class UserRequestDto {
   @ApiProperty()
   readonly email: string;
 
+  @ApiProperty()
+  readonly password: string;
+
   static toUserRequest(dto: UserRequestDto): UserRequest {
     return {
       name: dto.name,
       email: dto.email,
+      password: dto.password,
     };
   }
 }

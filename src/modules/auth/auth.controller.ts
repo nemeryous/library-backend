@@ -1,9 +1,18 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Request,
+  HttpStatus,
+  HttpCode,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { JwtRefreshGuard } from './guard/JwtRefreshGuard';
+import { RegisterDto } from './dto/register.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -11,7 +20,9 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
-    return this.authService.login(loginDto);
+    return AuthResponseDto.fromAuth(
+      await this.authService.login(LoginDto.toLogin(loginDto)),
+    );
   }
 
   @Post('refresh')
@@ -27,5 +38,11 @@ export class AuthController {
     const refreshToken = req.get('Authorization').replace('Bearer', '').trim();
     await this.authService.logout(refreshToken);
     return { message: 'Logged out successfully' };
+  }
+
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  async register(@Body() registerDto: RegisterDto): Promise<AuthResponseDto> {
+    return this.authService.register(RegisterDto.toRegister(registerDto));
   }
 }

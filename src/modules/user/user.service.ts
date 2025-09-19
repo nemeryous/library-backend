@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from './entity/user.entity';
 import { User } from './domain/user';
 import { UserRequest } from './domain/user-request';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UserService {
@@ -20,13 +21,11 @@ export class UserService {
     return User.fromEntity(await this.findOneOrThrow(id));
   }
 
-  async findByEmail(email: string): Promise<User> {
+  async findByEmail(email: string): Promise<User | null> {
     const user = await this.userRepository.findOneBy({ email });
-
     if (!user) {
-      throw new NotFoundException('User not found');
+      return null;
     }
-    
     return User.fromEntity(user);
   }
 
@@ -49,6 +48,10 @@ export class UserService {
 
   async delete(id: number): Promise<void> {
     await this.userRepository.delete(await this.findOneOrThrow(id));
+  }
+
+  async hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, 10);
   }
 
   private async findOneOrThrow(id: number): Promise<UserEntity> {

@@ -8,6 +8,10 @@ import { UserService } from '../user/user.service';
 import { LoginDto } from './dto/login.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { RefreshTokenEntity } from './entity/refresh-token.entity';
+import { RegisterDto } from './dto/register.dto';
+import { Login } from './domain/login';
+import { Auth } from './domain/auth';
+import { Register } from './domain/register';
 
 @Injectable()
 export class AuthService {
@@ -18,8 +22,8 @@ export class AuthService {
     private refreshTokenRepository: Repository<RefreshTokenEntity>,
   ) {}
 
-  async login(loginDto: LoginDto): Promise<AuthResponseDto> {
-    const user = await this.validateUser(loginDto.email, loginDto.password);
+  async login(login: Login): Promise<Auth> {
+    const user = await this.validateUser(login.email, login.password);
     const payload = { email: user.email, sub: user.id, role: user.role };
 
     const accessToken = this.jwtService.sign(payload, {
@@ -93,6 +97,25 @@ export class AuthService {
     }
 
     return refreshToken.expiresAt > new Date();
+  }
+
+  async register(register: Register): Promise<any> {
+    const existing = await this.userService.findByEmail(register.email);
+
+    if (existing) {
+      throw new Error('Email already exists');
+    }
+
+    const hashedPassword = await this.userService.hashPassword(
+      register.password,
+    );
+
+    const user = await this.userService.create({
+      ...register,
+      password: hashedPassword,
+    });
+
+    return 'User registered successfully';
   }
 
   private async storeRefreshToken(
