@@ -1,3 +1,6 @@
+import { AuthModule } from './modules/auth/auth.module';
+import { AuthController } from './modules/auth/auth.controller';
+import { AuthService } from './modules/auth/auth.service';
 import { UserModule } from './modules/user/user.module';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
@@ -8,6 +11,7 @@ import { BookModule } from './modules/book/book.module';
 
 @Module({
   imports: [
+        AuthModule, 
     UserModule,
     BookModule,
     ConfigModule.forRoot(),
