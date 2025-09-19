@@ -1,21 +1,12 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseIntPipe,
-  Post,
-  Put,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { BorrowHistoryService } from './borrowhistory.service';
 import { BorrowHistoryDto } from './dto/borrow-history.dto';
 import { BorrowBookDto } from './dto/borrow-book.dto';
 import { BookItemDto } from '../book/dto/book-item.dto';
-import { BorrowHistory } from './domain/borrow-history';
 import { BookDetailDto } from '../book/dto/book-detail.dto';
+import { BookBorrowHistoryDto } from './dto/book-borrow-history.dto';
 
-@Controller('borrow-history')
+@Controller('borrows')
 export class BorrowHistoryController {
   constructor(private readonly borrowHistoryService: BorrowHistoryService) {}
 
@@ -37,20 +28,16 @@ export class BorrowHistoryController {
     );
   }
 
-  @Get('get-book-by-code/:code')
+  @Get('by-code/:code')
   async getBorrowHistoryByCodeEan13(
     @Param('code') code: string,
-  ): Promise<{ available: boolean; borrowHistories: BorrowHistoryDto[] }> {
-    const { available, borrowHistories } =
-      await this.borrowHistoryService.getBorrowHistoryByCodeEan13(code);
-
-    return {
-      available,
-      borrowHistories: BorrowHistoryDto.fromBorrowHistories(borrowHistories),
-    };
+  ): Promise<BookBorrowHistoryDto> {
+    return BookBorrowHistoryDto.fromBookBorrowHistory(
+      await this.borrowHistoryService.getBorrowHistoryByCodeEan13(code),
+    );
   }
 
-  @Get('borrowed-books-by-user/:userId')
+  @Get('by-user/:userId')
   async getBorrowedBooksByUser(
     @Param('userId') userId: number,
   ): Promise<BookItemDto[]> {

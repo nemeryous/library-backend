@@ -1,4 +1,4 @@
-import { BorrowBook } from '../domain/borrow-book.';
+import { BorrowBook } from '../domain/borrow-book';
 
 export class BorrowBookDto {
   readonly userId: number;
