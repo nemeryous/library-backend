@@ -1,3 +1,6 @@
+import { BorrowHistoryService } from './modules/borrow-history/borrowhistory.service';
+import { BorrowHistoryModule } from './modules/borrow-history/borrowhistory.module';
+import { BorrowHistoryController } from './modules/borrow-history/borrowhistory.controller';
 import { UserModule } from './modules/user/user.module';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
@@ -8,6 +11,7 @@ import { BookModule } from './modules/book/book.module';
 
 @Module({
   imports: [
+    BorrowHistoryModule,
     UserModule,
     BookModule,
     ConfigModule.forRoot(),
