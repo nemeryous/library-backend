@@ -1,0 +1,152 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { BorrowHistoryEntity } from './entity/borrow-history.entity';
+import { In, Repository } from 'typeorm';
+import { BorrowHistory } from './domain/borrow-history';
+import { BorrowBook } from './domain/borrow-book';
+import { BookEntity } from '../book/entity/book.entity';
+import { UserEntity } from '../user/entity/user.entity';
+import { BorrowStatusEnum } from 'src/utils/BorrowStatusEnum';
+import { Book } from '../book/domain/book';
+import { BookBorrowHistoryDto } from './dto/book-borrow-history.dto';
+import { BookBorrowHistory } from './domain/book-borrow-history';
+
+@Injectable()
+export class BorrowHistoryService {
+  constructor(
+    @InjectRepository(BorrowHistoryEntity)
+    private readonly borrowHistoryRepository: Repository<BorrowHistoryEntity>,
+    @InjectRepository(BookEntity)
+    private readonly bookRepository: Repository<BookEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
+  ) {}
+
+  async findAll(): Promise<BorrowHistory[]> {
+    return BorrowHistory.fromEntities(
+      await this.borrowHistoryRepository.find(),
+    );
+  }
+
+  async findById(id: number): Promise<BorrowHistory> {
+    return BorrowHistory.fromEntity(await this.findOneOrThrow(id));
+  }
+
+  async create(borrowBook: BorrowBook): Promise<BorrowHistory> {
+    const book = await this.findBookOrThrow(borrowBook.bookId);
+    const user = await this.findUserOrThrow(borrowBook.userId);
+
+    const entity = await this.borrowHistoryRepository.save(
+      this.borrowHistoryRepository.create({
+        user,
+        book,
+        userId: user.id,
+        bookId: book.id,
+        borrowDate: new Date(),
+      }),
+    );
+
+    await this.bookRepository.save({ ...book, available: false });
+
+    return BorrowHistory.fromEntity(entity);
+  }
+
+  async remove(id: number): Promise<BorrowHistory> {
+    const entity = await this.findOneOrThrow(id);
+
+    if (entity.status === BorrowStatusEnum.RETURNED) {
+      throw new Error(`Book with borrow history ID ${id} is already returned`);
+    }
+
+    const updatedEntity = await this.borrowHistoryRepository.save({
+      ...entity,
+      returnDate: new Date(),
+      status: BorrowStatusEnum.RETURNED,
+    });
+
+    const book = entity.book;
+
+    await this.bookRepository.save({ ...book, available: true });
+
+    return BorrowHistory.fromEntity(updatedEntity);
+  }
+
+  async getBorrowHistoryByCodeEan13(code: string): Promise<BookBorrowHistory> {
+    const bookEntity = await this.bookRepository.findOneBy({ code });
+
+    if (!bookEntity) {
+      throw new NotFoundException(`Book with code ${code} not found`);
+    }
+
+    const borrowHistoryEntities = await this.borrowHistoryRepository.find({
+      where: { bookId: bookEntity.id },
+      relations: {
+        book: true,
+        user: true,
+      },
+      order: { borrowDate: 'DESC' },
+    });
+
+    return {
+      available: bookEntity.available,
+      borrowHistories: BorrowHistory.fromEntities(borrowHistoryEntities),
+    };
+  }
+
+  private async findOneOrThrow(id: number): Promise<BorrowHistoryEntity> {
+    const entity = await this.borrowHistoryRepository.findOne({
+      where: { id },
+      relations: {
+        book: true,
+        user: true,
+      },
+    });
+
+    if (!entity) {
+      throw new NotFoundException(`Borrow history with ID ${id} not found`);
+    }
+
+    return entity;
+  }
+
+  async getBorrowedBooksByUser(userId: number): Promise<Book[]> {
+    const borrowHistoryEntities = await this.borrowHistoryRepository.find({
+      where: { userId, status: BorrowStatusEnum.BORROWED },
+      relations: {
+        book: true,
+      },
+    });
+
+    if (borrowHistoryEntities.length === 0) {
+      return [];
+    }
+
+    return await this.bookRepository.findBy({
+      id: In(borrowHistoryEntities.map((bh) => bh.bookId)),
+    });
+  }
+
+  private async findBookOrThrow(id: number): Promise<BookEntity> {
+    const book = await this.bookRepository.findOneBy({ id });
+
+    if (!book) {
+      throw new NotFoundException(`Book with ID ${id} not found`);
+    }
+
+    if (!book.available) {
+      throw new Error(`Book with ID ${id} is not available`);
+    }
+
+    return book;
+  }
+
+  private async findUserOrThrow(id: number): Promise<UserEntity> {
+    const user = await this.userRepository.findOneBy({ id });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    return user;
+  }
+}
