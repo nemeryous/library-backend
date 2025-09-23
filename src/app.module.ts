@@ -1,6 +1,4 @@
-import { BorrowHistoryService } from './modules/borrow-history/borrowhistory.service';
 import { BorrowHistoryModule } from './modules/borrow-history/borrowhistory.module';
-import { BorrowHistoryController } from './modules/borrow-history/borrowhistory.controller';
 import { UserModule } from './modules/user/user.module';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
@@ -8,6 +6,13 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { BookModule } from './modules/book/book.module';
+import {
+  AuthGuard,
+  KeycloakConnectModule,
+  ResourceGuard,
+  RoleGuard,
+} from 'nest-keycloak-connect';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -25,8 +30,28 @@ import { BookModule } from './modules/book/book.module';
       autoLoadEntities: true,
       synchronize: true,
     }),
+    KeycloakConnectModule.register({
+      authServerUrl: process.env.AUTH_SERVER_URL || 'http://localhost:8080',
+      realm: process.env.AUTH_REALM,
+      clientId: process.env.AUTH_CLIENT_ID,
+      secret: process.env.AUTH_CLIENT_SECRET || '',
+    }),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ResourceGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RoleGuard,
+    },
+  ],
 })
 export class AppModule {}
