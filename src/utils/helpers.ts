@@ -20,3 +20,7 @@ function calculateEAN13CheckDigit(ean12: string): number {
 
   return (10 - (sum % 10)) % 10;
 }
+
+export function isNil(value: any): boolean {
+  return value === null || value === undefined;
+}

@@ -1,3 +1,8 @@
+import { AuthModule } from './modules/auth/auth.module';
+import { AuthService } from './modules/auth/auth.service';
+import { AuthController } from './modules/auth/auth.controller';
+import { KeycloakModule } from './modules/keycloak/keycloak.module';
+import { KeycloakService } from './modules/keycloak/keycloak.service';
 import { BorrowHistoryModule } from './modules/borrow-history/borrowhistory.module';
 import { UserModule } from './modules/user/user.module';
 import { Module } from '@nestjs/common';
@@ -16,6 +21,8 @@ import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
+    AuthModule,
+    KeycloakModule,
     BorrowHistoryModule,
     UserModule,
     BookModule,
