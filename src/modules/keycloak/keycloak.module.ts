@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
+import { SharedModule } from '../../shared/shared.module';
 import { KeycloakService } from './keycloak.service';
 
 @Module({
-  imports: [],
+  imports: [SharedModule],
   controllers: [],
   providers: [KeycloakService],
   exports: [KeycloakService],

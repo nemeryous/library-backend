@@ -2,12 +2,15 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { KeycloakService } from '../keycloak/keycloak.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from '../user/entity/user.entity';
-import { Auth, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { ApiConfigService } from 'src/shared/services/api-config.service';
 import { RegisterForm } from './domain/register-form';
 import { AuthResult } from './domain/auth-result';
-import { first } from 'rxjs';
 import { LoginForm } from './domain/login-form';
+import { Token } from './domain/token';
+import { jwtDecode } from 'jwt-decode';
+import { TokenPayload } from './domain/token-payload';
+import { RefreshTokenForm } from './domain/refresh-token-form';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +19,7 @@ export class AuthService {
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
     private readonly apiConfigService: ApiConfigService,
-  ) {}
+  ) { }
 
   async register(registerForm: RegisterForm): Promise<AuthResult> {
     if (await this.userRepository.findOneBy({ email: registerForm.email })) {
@@ -49,7 +52,15 @@ export class AuthService {
   }
 
   async login(login: LoginForm): Promise<AuthResult> {
-    return await this.createTokenForUser;
+    return await this.createTokenForUser(
+      await this.keycloakService.login(login),
+    );
+  }
+
+  async refreshToken(refreshTokenForm: RefreshTokenForm): Promise<AuthResult> {
+    return await this.createTokenForUser(
+      await this.keycloakService.refreshAccessToken(refreshTokenForm.refreshToken)
+    );
   }
 
   private async createTokenForUser(
@@ -65,8 +76,8 @@ export class AuthService {
     });
 
     return {
-      user,
       token,
+      user,
     };
   }
 

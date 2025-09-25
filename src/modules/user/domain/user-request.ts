@@ -1,12 +1,14 @@
-import { UserEntity } from "../entity/user.entity";
+import { UserEntity } from '../entity/user.entity';
 
 export class UserRequest {
-  readonly name: string;
+  readonly firstName: string;
+  readonly lastName: string;
   readonly email: string;
 
   static toEntity(request: UserRequest): Partial<UserEntity> {
     return {
-      name: request.name,
+      firstName: request.firstName,
+      lastName: request.lastName,
       email: request.email,
     };
   }

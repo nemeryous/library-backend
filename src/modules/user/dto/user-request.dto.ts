@@ -3,14 +3,18 @@ import { UserRequest } from '../domain/user-request';
 
 export class UserRequestDto {
   @ApiProperty()
-  readonly name: string;
+  readonly firstName: string;
+
+  @ApiProperty()
+  readonly lastName: string;
 
   @ApiProperty()
   readonly email: string;
 
   static toUserRequest(dto: UserRequestDto): UserRequest {
     return {
-      name: dto.name,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
       email: dto.email,
     };
   }
