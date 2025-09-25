@@ -1,4 +1,4 @@
-export class KeycloakUser {
+export class KeycloakUserCreate {
   email: string;
   firstName?: string;
   lastName?: string;

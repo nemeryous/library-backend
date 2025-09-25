@@ -2,14 +2,12 @@ import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserEntity } from '../user/entity/user.entity';
 import { RegisterFormDto } from './dto/register-form.dto';
-import { AuthResultDto } from './dto/auth-result.dto copy';
 import { RequireLoggedIn } from '../../guards/role-container';
 import { CurrentUserDto } from './dto/current-user.dto';
-import { AuthenticatedUser } from 'nest-keycloak-connect';
 import { RefreshTokenFormDto } from './dto/refresh-token-form.dto';
 import { LoginFormDto } from './dto/login-form.dto';
-import { Public } from '../../decorator/public.decorator';
 import { AuthUser } from 'src/decorator/auth-user.decorator';
+import { AuthResultDto } from './dto/auth-result.dto';
 
 @Controller('auths')
 export class AuthController {

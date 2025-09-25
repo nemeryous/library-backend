@@ -1,12 +1,12 @@
 import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common';
 import { KeycloakAdminClient } from '@s3pweb/keycloak-admin-client-cjs';
 import { ApiConfigService } from 'src/shared/services/api-config.service';
-import { KeycloakUser } from './domain/keycloak-user';
 import { ppid } from 'process';
 import { LoginForm } from '../auth/domain/login-form';
 import { Token } from '../auth/domain/token';
 import axios from 'axios';
 import { AxiosError } from 'axios';
+import { KeycloakUserCreate } from './domain/keycloak-user-create';
 
 @Injectable()
 export class KeycloakService implements OnModuleInit {
@@ -25,7 +25,7 @@ export class KeycloakService implements OnModuleInit {
         });
     }
 
-    async createUser(user: KeycloakUser) {
+    async createUser(user: KeycloakUserCreate) {
         return this.kcAdminClient.users.create({
             email: user.email,
             firstName: user.firstName,
