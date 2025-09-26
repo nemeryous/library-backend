@@ -16,7 +16,9 @@ import { LoginFormDto } from './dto/login-form.dto';
 import { AuthUser } from 'src/decorator/auth-user.decorator';
 import { AuthResultDto } from './dto/auth-result.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Auth')
 @Controller('auths')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
