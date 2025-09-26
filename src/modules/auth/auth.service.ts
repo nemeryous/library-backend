@@ -19,7 +19,7 @@ export class AuthService {
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
     private readonly apiConfigService: ApiConfigService,
-  ) { }
+  ) {}
 
   async register(registerForm: RegisterForm): Promise<AuthResult> {
     if (await this.userRepository.findOneBy({ email: registerForm.email })) {
@@ -59,7 +59,9 @@ export class AuthService {
 
   async refreshToken(refreshTokenForm: RefreshTokenForm): Promise<AuthResult> {
     return await this.createTokenForUser(
-      await this.keycloakService.refreshAccessToken(refreshTokenForm.refreshToken)
+      await this.keycloakService.refreshAccessToken(
+        refreshTokenForm.refreshToken,
+      ),
     );
   }
 

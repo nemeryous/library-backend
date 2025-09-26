@@ -2,37 +2,42 @@ import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserEntity } from '../user/entity/user.entity';
 import { RegisterFormDto } from './dto/register-form.dto';
-import { AuthResultDto } from './dto/auth-result.dto copy';
 import { RequireLoggedIn } from '../../guards/role-container';
 import { CurrentUserDto } from './dto/current-user.dto';
-import { AuthenticatedUser } from 'nest-keycloak-connect';
 import { RefreshTokenFormDto } from './dto/refresh-token-form.dto';
 import { LoginFormDto } from './dto/login-form.dto';
-import { Public } from '../../decorator/public.decorator';
 import { AuthUser } from 'src/decorator/auth-user.decorator';
+import { AuthResultDto } from './dto/auth-result.dto';
 
 @Controller('auths')
 export class AuthController {
-
-  constructor(
-    private readonly authService: AuthService
-  ) { }
+  constructor(private readonly authService: AuthService) {}
 
   @Post('register')
   async register(@Body() registerDto: RegisterFormDto): Promise<AuthResultDto> {
-    return AuthResultDto.fromAuthResult(await this.authService.register(RegisterFormDto.toRegisterForm(registerDto)));
+    return AuthResultDto.fromAuthResult(
+      await this.authService.register(
+        RegisterFormDto.toRegisterForm(registerDto),
+      ),
+    );
   }
 
   @Post('login')
   async login(@Body() loginDto: LoginFormDto): Promise<AuthResultDto> {
-    return AuthResultDto.fromAuthResult(await this.authService.login(LoginFormDto.toLoginForm(loginDto)));
+    return AuthResultDto.fromAuthResult(
+      await this.authService.login(LoginFormDto.toLoginForm(loginDto)),
+    );
   }
 
   @Post('refresh-token')
-  async refreshToken(@Body() refreshTokenFormDto: RefreshTokenFormDto): Promise<AuthResultDto> {
-    return AuthResultDto.fromAuthResult(await this.authService.refreshToken(
-      RefreshTokenFormDto.toRefreshTokenForm(refreshTokenFormDto)
-    ));
+  async refreshToken(
+    @Body() refreshTokenFormDto: RefreshTokenFormDto,
+  ): Promise<AuthResultDto> {
+    return AuthResultDto.fromAuthResult(
+      await this.authService.refreshToken(
+        RefreshTokenFormDto.toRefreshTokenForm(refreshTokenFormDto),
+      ),
+    );
   }
 
   @Get('me')
@@ -40,5 +45,4 @@ export class AuthController {
   getMe(@AuthUser() user: UserEntity): CurrentUserDto {
     return CurrentUserDto.fromUser(user);
   }
-
 }

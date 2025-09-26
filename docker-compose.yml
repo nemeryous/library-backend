@@ -1,27 +1,30 @@
-version: '3.8'
-
+version: '3.9'
 services:
   keycloak:
-    image: quay.io/keycloak/keycloak:latest
-    container_name: keycloak-nestjs-app
+    image: quay.io/keycloak/keycloak:26.3.4
+    container_name: keycloak
     command: start-dev
     environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_DB=postgres
+      - KC_DB_URL_HOST=postgres
+      - KC_DB_URL_DATABASE=library_db
+      - KC_DB_USERNAME=postgres
+      - KC_DB_PASSWORD=123456
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
     ports:
-      - "8080:8080"
-    volumes:
-      - ./keycloak-data:/opt/keycloak/data
-    
+      - '8080:8080'
+    depends_on:
+      - postgres
+    restart: "no"
+
   postgres:
-    image: postgres:15
-    container_name: postgres-nestjs-app
-    restart: always
+    image: postgres:latest
+    container_name: postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123456
-      POSTGRES_DB: library_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=library_db
     ports:
-      - "5432:5432"
-    volumes:
-      - ./postgres-data:/var/lib/postgresql/data
+      - '5432:5432'
+    restart: "no"
