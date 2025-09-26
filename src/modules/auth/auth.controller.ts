@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserEntity } from '../user/entity/user.entity';
 import { RegisterFormDto } from './dto/register-form.dto';
@@ -8,6 +15,7 @@ import { RefreshTokenFormDto } from './dto/refresh-token-form.dto';
 import { LoginFormDto } from './dto/login-form.dto';
 import { AuthUser } from 'src/decorator/auth-user.decorator';
 import { AuthResultDto } from './dto/auth-result.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auths')
 export class AuthController {
@@ -41,6 +49,7 @@ export class AuthController {
   }
 
   @Get('me')
+  @UseGuards(AuthGuard('jwt'))
   @RequireLoggedIn()
   getMe(@AuthUser() user: UserEntity): CurrentUserDto {
     return CurrentUserDto.fromUser(user);

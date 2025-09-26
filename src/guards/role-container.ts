@@ -1,6 +1,6 @@
-import {applyDecorators, SetMetadata} from '@nestjs/common';
+import { applyDecorators, SetMetadata } from '@nestjs/common';
 
-import {RoleType} from './role-type';
+import { RoleType } from './role-type';
 
 function requireRole(roles: RoleType[]): MethodDecorator {
   return applyDecorators(SetMetadata('roles', roles));

@@ -22,7 +22,10 @@ export class AuthService {
   ) {}
 
   async register(registerForm: RegisterForm): Promise<AuthResult> {
-    if (await this.userRepository.findOneBy({ email: registerForm.email })) {
+    let user = await this.userRepository.findOneBy({
+      email: registerForm.email,
+    });
+    if (user && user.keyCloakId) {
       throw new BadRequestException(
         `Email ${registerForm.email} đã được sử dụng`,
       );
@@ -35,10 +38,17 @@ export class AuthService {
       password: registerForm.password,
     });
 
-    const user = await this.userRepository.save({
-      keycloakId: id,
-      ...registerForm,
-    });
+    if (user && !user.keyCloakId) {
+      user.keyCloakId = id;
+      user.firstName = registerForm.firstName;
+      user.lastName = registerForm.lastName;
+      user = await this.userRepository.save(user);
+    } else if (!user) {
+      user = await this.userRepository.save({
+        keyCloakId: id,
+        ...registerForm,
+      });
+    }
 
     const token = await this.keycloakService.login({
       email: registerForm.email,
