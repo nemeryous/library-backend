@@ -1,20 +1,19 @@
-
-import { ApiProperty } from "@nestjs/swagger";
-import { AuthResult } from "../domain/auth-result";
-import { TokenDto } from "./token.dto";
+import { ApiProperty } from '@nestjs/swagger';
+import { AuthResult } from '../domain/auth-result';
+import { TokenDto } from './token.dto';
 import { CurrentUserDto } from './current-user.dto';
 
 export class AuthResultDto {
-    @ApiProperty()
-    token: TokenDto;
+  @ApiProperty()
+  token: TokenDto;
 
-    @ApiProperty()
-    user: CurrentUserDto;
+  @ApiProperty()
+  user: CurrentUserDto;
 
-    public static fromAuthResult(authResult: AuthResult): AuthResultDto {
-        return {
-            token: TokenDto.fromToken(authResult.token),
-            user: CurrentUserDto.fromUser(authResult.user),
-        };
-    }
+  public static fromAuthResult(authResult: AuthResult): AuthResultDto {
+    return {
+      token: TokenDto.fromToken(authResult.token),
+      user: CurrentUserDto.fromUser(authResult.user),
+    };
+  }
 }

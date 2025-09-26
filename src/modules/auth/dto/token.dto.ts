@@ -1,17 +1,17 @@
-import { Token } from "../domain/token";
+import { Token } from '../domain/token';
 
 export class TokenDto {
-    accessToken: string;
-    expiresIn: number;
-    refreshExpiresIn: number;
-    refreshToken: string;
-    tokenType: string;
-    sessionState: string;
-    scope: string;
+  accessToken: string;
+  expiresIn: number;
+  refreshExpiresIn: number;
+  refreshToken: string;
+  tokenType: string;
+  sessionState: string;
+  scope: string;
 
-    public static fromToken(token: Token): TokenDto {
-        return {
-            ...token,
-        };
-    }
+  public static fromToken(token: Token): TokenDto {
+    return {
+      ...token,
+    };
+  }
 }
