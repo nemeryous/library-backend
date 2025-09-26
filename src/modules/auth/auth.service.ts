@@ -19,10 +19,10 @@ export class AuthService {
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
     private readonly apiConfigService: ApiConfigService,
-  ) {}
+  ) { }
 
   async register(registerForm: RegisterForm): Promise<AuthResult> {
-    let user = await this.userRepository.findOneBy({
+    const user = await this.userRepository.findOneBy({
       email: registerForm.email,
     });
     if (user && user.keyCloakId) {
@@ -38,17 +38,7 @@ export class AuthService {
       password: registerForm.password,
     });
 
-    if (user && !user.keyCloakId) {
-      user.keyCloakId = id;
-      user.firstName = registerForm.firstName;
-      user.lastName = registerForm.lastName;
-      user = await this.userRepository.save(user);
-    } else if (!user) {
-      user = await this.userRepository.save({
-        keyCloakId: id,
-        ...registerForm,
-      });
-    }
+    const updatedUser = await this.updateOrCreateUser(user, id, registerForm);
 
     const token = await this.keycloakService.login({
       email: registerForm.email,
@@ -56,7 +46,7 @@ export class AuthService {
     });
 
     return {
-      user,
+      user: updatedUser,
       token,
     };
   }
@@ -113,4 +103,30 @@ export class AuthService {
       })
     );
   }
+
+  private async updateOrCreateUser(
+    existingUser: UserEntity | null,
+    keyCloakId: string,
+    registerForm: RegisterForm,
+  ): Promise<UserEntity> {
+    if (existingUser && !existingUser.keyCloakId) {
+      existingUser.keyCloakId = keyCloakId;
+      existingUser.firstName = registerForm.firstName;
+      existingUser.lastName = registerForm.lastName;
+
+      return await this.userRepository.save(existingUser);
+    } else if (!existingUser) {
+      const newUser = this.userRepository.create({
+        keyCloakId,
+        firstName: registerForm.firstName,
+        lastName: registerForm.lastName,
+        email: registerForm.email,
+      });
+
+      return await this.userRepository.save(newUser);
+    }
+
+    return existingUser;
+  }
+
 }
