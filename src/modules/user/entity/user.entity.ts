@@ -1,4 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { RoleType } from '../../../guards/role-type';
 
 @Entity('users')
 export class UserEntity {
@@ -6,8 +7,21 @@ export class UserEntity {
   id: number;
 
   @Column()
-  name: string;
+  firstName: string;
+
+  @Column()
+  lastName: string;
 
   @Column()
   email: string;
+
+  @Column({ unique: true, nullable: true })
+  keyCloakId?: string;
+
+  @Column({
+    type: 'enum',
+    enum: RoleType,
+    default: RoleType.USER,
+  })
+  role: RoleType;
 }

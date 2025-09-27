@@ -13,8 +13,9 @@ import { BookCreateDto } from './dto/book-create.dto';
 import { BookUpdateDto } from './dto/book-update.dto';
 import { BookItemDto } from './dto/book-item.dto';
 import { BookDetailDto } from './dto/book-detail.dto';
-import { META_ROLES, Roles } from 'nest-keycloak-connect';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Books')
 @Controller('books')
 export class BookController {
   constructor(private readonly bookService: BookService) {}
@@ -34,7 +35,6 @@ export class BookController {
   }
 
   @Post()
-  @Roles({ roles: ['ADMIN'] })
   async create(@Body() bookCreateDto: BookCreateDto): Promise<BookItemDto> {
     return BookItemDto.fromBook(
       await this.bookService.create(BookCreateDto.toBookCreate(bookCreateDto)),
