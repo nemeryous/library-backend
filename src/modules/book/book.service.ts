@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, Like, Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { BookEntity } from './entity/book.entity';
 import { BookCreate } from './domain/book-create';
 import { Book } from './domain/book';
