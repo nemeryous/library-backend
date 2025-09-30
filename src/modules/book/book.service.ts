@@ -12,7 +12,6 @@ import { BookUpdate } from './domain/book-update';
 import { generateEAN13 } from 'src/utils/helpers';
 import { UploadResult } from './domain/upload-result';
 import * as XLSX from 'xlsx';
-import { BookExcelRowDto } from './dto/book-excel-row.dto';
 
 @Injectable()
 export class BookService {
@@ -65,48 +64,146 @@ export class BookService {
   }
 
   async uploadBooks(file: Express.Multer.File): Promise<UploadResult> {
+    const jsonData = this.parseExcelFile(file);
+
+    if (jsonData.length === 0)
+      throw new BadRequestException('Excel file is empty');
+
+    const validationResult = this.validateBookData(jsonData);
+
+    const creationResult = await this.createBooksInParallel(
+      validationResult.validBooks,
+    );
+
+    return {
+      success: creationResult.success,
+      failed: validationResult.invalidCount + creationResult.failed,
+      errors: [...validationResult.errors, ...creationResult.errors],
+    };
+  }
+
+  private parseExcelFile(file: Express.Multer.File): BookCreate[] {
     if (!file) throw new BadRequestException('No file uploaded');
 
     const workbook = XLSX.read(file.buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
 
-    const jsonData = XLSX.utils.sheet_to_json(worksheet) as BookCreate[];
+    return XLSX.utils.sheet_to_json(worksheet) as BookCreate[];
+  }
 
-    if (jsonData.length === 0) throw new BadRequestException('Excel file is empty');
+  private async createBooksInParallel(
+    validBooks: Array<{ index: number; data: BookCreate }>,
+  ): Promise<{ success: number; failed: number; errors: string[] }> {
+    if (validBooks.length === 0) {
+      return { success: 0, failed: 0, errors: [] };
+    }
+
+    const promises = validBooks.map(async ({ index, data }) => {
+      try {
+        await this.create(data);
+
+        return { success: true, index, error: null };
+      } catch (error) {
+        return {
+          success: false,
+          index,
+          error: `Row ${index}: ${error.message}`,
+        };
+      }
+    });
+
+    const results = await Promise.allSettled(promises);
 
     let success = 0;
     let failed = 0;
     const errors: string[] = [];
 
-    for (let i = 0; i < jsonData.length; i++) {
-      try {
-        const row = jsonData[i];
-
-        if (
-          !row.name ||
-          !row.author ||
-          !row.publisher ||
-          !row.description ||
-          !row.category
-        ) {
+    results.forEach((result) => {
+      if (result.status === 'fulfilled') {
+        if (result.value.success) {
+          success++;
+        } else {
           failed++;
-          errors.push(`Row ${i + 2}: Missing required fields`);
-          continue;
+
+          if (result.value.error) {
+            errors.push(result.value.error);
+          }
         }
-
-        await this.create({
-          ...row,
-        });
-
-        success++;
-      } catch (error) {
+      } else {
         failed++;
-        errors.push(`Row ${i + 2}: ${error.message}`);
+        errors.push(`Unexpected error: ${result.reason}`);
       }
-    }
+    });
 
     return { success, failed, errors };
+  }
+
+  private validateBookData(jsonData: any[]): {
+    validBooks: Array<{ index: number; data: BookCreate }>;
+    invalidCount: number;
+    errors: string[];
+  } {
+    const validBooks: Array<{ index: number; data: BookCreate }> = [];
+    const errors: string[] = [];
+    let invalidCount = 0;
+
+    jsonData.forEach((row, index) => {
+      const rowNumber = index + 2;
+
+      const missingFields = this.getMissingFields(row);
+
+      if (missingFields.length > 0) {
+        invalidCount++;
+        errors.push(
+          `Row ${rowNumber}: Missing required fields: ${missingFields.join(', ')}`,
+        );
+        return;
+      }
+
+      validBooks.push({
+        index: rowNumber,
+        data: this.mapRowToBookCreate(row),
+      });
+    });
+
+    return { validBooks, invalidCount, errors };
+  }
+
+  private mapRowToBookCreate(row: any): BookCreate {
+    let available = true;
+    if (row.available !== undefined) {
+      const availableValue = String(row.available).toLowerCase();
+      available = ['true'].includes(availableValue);
+    }
+
+    return {
+      name: String(row.name).trim(),
+      author: String(row.author).trim(),
+      publisher: String(row.publisher).trim(),
+      description: String(row.description).trim(),
+      category: String(row.category).trim(),
+      available,
+    };
+  }
+
+  private getMissingFields(row: any): string[] {
+    const requiredFields = [
+      'name',
+      'author',
+      'publisher',
+      'description',
+      'category',
+    ];
+    const missingFields: string[] = [];
+
+    requiredFields.forEach((field) => {
+      if (!row[field] || String(row[field]).trim() === '') {
+        missingFields.push(field);
+      }
+    });
+
+    return missingFields;
   }
 
   private async generateUniqueEAN13(): Promise<string> {
