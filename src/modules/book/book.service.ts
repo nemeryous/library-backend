@@ -81,7 +81,6 @@ export class BookService {
         count: savedBooks.length,
       };
     } catch (error) {
-      
       return {
         status: 'error',
         message: `Failed to upload books: ${error.message}`,
@@ -94,7 +93,7 @@ export class BookService {
       rows.map(async (row) => this.createBookEntityFromRow(row)),
     );
   }
-  
+
   private async createBookEntityFromRow(row: any): Promise<BookEntity> {
     return this.bookRepository.create({
       name: this.sanitizeString(row.name),
@@ -107,7 +106,7 @@ export class BookService {
     });
   }
 
-  private sanitizeString(value: any): string {
+  private sanitizeString(value: string | null | undefined): string {
     return String(value || '').trim();
   }
 
