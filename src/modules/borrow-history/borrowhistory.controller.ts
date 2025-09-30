@@ -5,7 +5,9 @@ import { BorrowBookDto } from './dto/borrow-book.dto';
 import { BookItemDto } from '../book/dto/book-item.dto';
 import { BookDetailDto } from '../book/dto/book-detail.dto';
 import { BookBorrowHistoryDto } from './dto/book-borrow-history.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Borrow History')
 @Controller('borrows')
 export class BorrowHistoryController {
   constructor(private readonly borrowHistoryService: BorrowHistoryService) {}
