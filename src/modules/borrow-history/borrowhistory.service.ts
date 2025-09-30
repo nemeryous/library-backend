@@ -133,7 +133,17 @@ export class BorrowHistoryService {
       relations: { book: true, user: true },
     });
 
-    const data = histories.map((history) => ({
+    const data = this.prepareDataForExcel(histories);
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Borrow History');
+
+    return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+  }
+
+  private prepareDataForExcel(histories: BorrowHistoryEntity[]): any[] {
+    return histories.map((history) => ({
       Name: history.book.name,
       Code: history.book.code,
       Author: history.book.author,
@@ -145,12 +155,6 @@ export class BorrowHistoryService {
         : 'Not returned',
       Status: history.status,
     }));
-
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Borrow History');
-
-    return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
   }
 
   private async findBookOrThrow(id: number): Promise<BookEntity> {
