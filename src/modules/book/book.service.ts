@@ -66,8 +66,9 @@ export class BookService {
   async uploadBooks(file: Express.Multer.File): Promise<UploadResult> {
     const jsonData = this.parseExcelFile(file);
 
-    if (jsonData.length === 0)
+    if (jsonData.length === 0) {
       throw new BadRequestException('Excel file is empty');
+    }
 
     const validationResult = this.validateBookData(jsonData);
 
@@ -115,26 +116,28 @@ export class BookService {
 
     const results = await Promise.allSettled(promises);
 
-    let success = 0;
-    let failed = 0;
-    const errors: string[] = [];
+    const { success, failed, errors } = results.reduce(
+      (acc, result) => {
+        if (result.status === 'fulfilled') {
+          if (result.value.success) {
+            acc.success++;
+          } else {
+            acc.failed++;
 
-    results.forEach((result) => {
-      if (result.status === 'fulfilled') {
-        if (result.value.success) {
-          success++;
-        } else {
-          failed++;
-
-          if (result.value.error) {
-            errors.push(result.value.error);
+            if (result.value.error) {
+              acc.errors.push(result.value.error);
+            }
           }
+
+        } else {
+          acc.failed++;
+          acc.errors.push(`Unexpected error: ${result.reason}`);
         }
-      } else {
-        failed++;
-        errors.push(`Unexpected error: ${result.reason}`);
-      }
-    });
+
+        return acc;
+      },
+      { success: 0, failed: 0, errors: [] as string[] },
+    );
 
     return { success, failed, errors };
   }
@@ -195,15 +198,8 @@ export class BookService {
       'description',
       'category',
     ];
-    const missingFields: string[] = [];
-
-    requiredFields.forEach((field) => {
-      if (!row[field] || String(row[field]).trim() === '') {
-        missingFields.push(field);
-      }
-    });
-
-    return missingFields;
+    
+    return requiredFields.filter((field) => !row[field]?.toString().trim());
   }
 
   private async generateUniqueEAN13(): Promise<string> {
