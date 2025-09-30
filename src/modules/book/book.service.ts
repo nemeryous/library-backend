@@ -64,23 +64,51 @@ export class BookService {
   }
 
   async uploadBooks(file: Express.Multer.File): Promise<UploadResult> {
-    const jsonData = this.parseExcelFile(file);
+    try {
+      const jsonData = this.parseExcelFile(file);
 
-    if (jsonData.length === 0) {
-      throw new BadRequestException('Excel file is empty');
+      if (jsonData.length === 0) {
+        throw new BadRequestException('Excel file is empty');
+      }
+
+      const bookEntities = await this.createBookEntitiesFromRows(jsonData);
+
+      const savedBooks = await this.bookRepository.save(bookEntities);
+
+      return {
+        status: 'success',
+        message: 'Books uploaded successfully',
+        count: savedBooks.length,
+      };
+    } catch (error) {
+      
+      return {
+        status: 'error',
+        message: `Failed to upload books: ${error.message}`,
+      };
     }
+  }
 
-    const validationResult = this.validateBookData(jsonData);
-
-    const creationResult = await this.createBooksInParallel(
-      validationResult.validBooks,
+  private async createBookEntitiesFromRows(rows: any[]): Promise<BookEntity[]> {
+    return Promise.all(
+      rows.map(async (row) => this.createBookEntityFromRow(row)),
     );
+  }
+  
+  private async createBookEntityFromRow(row: any): Promise<BookEntity> {
+    return this.bookRepository.create({
+      name: this.sanitizeString(row.name),
+      author: this.sanitizeString(row.author),
+      publisher: this.sanitizeString(row.publisher),
+      description: this.sanitizeString(row.description),
+      category: this.sanitizeString(row.category),
+      available: row.available === true || row.available === 'true',
+      code: await this.generateUniqueEAN13(),
+    });
+  }
 
-    return {
-      success: creationResult.success,
-      failed: validationResult.invalidCount + creationResult.failed,
-      errors: [...validationResult.errors, ...creationResult.errors],
-    };
+  private sanitizeString(value: any): string {
+    return String(value || '').trim();
   }
 
   private parseExcelFile(file: Express.Multer.File): BookCreate[] {
@@ -91,115 +119,6 @@ export class BookService {
     const worksheet = workbook.Sheets[sheetName];
 
     return XLSX.utils.sheet_to_json(worksheet) as BookCreate[];
-  }
-
-  private async createBooksInParallel(
-    validBooks: Array<{ index: number; data: BookCreate }>,
-  ): Promise<{ success: number; failed: number; errors: string[] }> {
-    if (validBooks.length === 0) {
-      return { success: 0, failed: 0, errors: [] };
-    }
-
-    const promises = validBooks.map(async ({ index, data }) => {
-      try {
-        await this.create(data);
-
-        return { success: true, index, error: null };
-      } catch (error) {
-        return {
-          success: false,
-          index,
-          error: `Row ${index}: ${error.message}`,
-        };
-      }
-    });
-
-    const results = await Promise.allSettled(promises);
-
-    const { success, failed, errors } = results.reduce(
-      (acc, result) => {
-        if (result.status === 'fulfilled') {
-          if (result.value.success) {
-            acc.success++;
-          } else {
-            acc.failed++;
-
-            if (result.value.error) {
-              acc.errors.push(result.value.error);
-            }
-          }
-
-        } else {
-          acc.failed++;
-          acc.errors.push(`Unexpected error: ${result.reason}`);
-        }
-
-        return acc;
-      },
-      { success: 0, failed: 0, errors: [] as string[] },
-    );
-
-    return { success, failed, errors };
-  }
-
-  private validateBookData(jsonData: any[]): {
-    validBooks: Array<{ index: number; data: BookCreate }>;
-    invalidCount: number;
-    errors: string[];
-  } {
-    const validBooks: Array<{ index: number; data: BookCreate }> = [];
-    const errors: string[] = [];
-    let invalidCount = 0;
-
-    jsonData.forEach((row, index) => {
-      const rowNumber = index + 2;
-
-      const missingFields = this.getMissingFields(row);
-
-      if (missingFields.length > 0) {
-        invalidCount++;
-        errors.push(
-          `Row ${rowNumber}: Missing required fields: ${missingFields.join(', ')}`,
-        );
-        return;
-      }
-
-      validBooks.push({
-        index: rowNumber,
-        data: this.mapRowToBookCreate(row),
-      });
-    });
-
-    return { validBooks, invalidCount, errors };
-  }
-
-  private mapRowToBookCreate(row: any): BookCreate {
-    let available = true;
-    if (row.available !== undefined) {
-      const availableValue = String(row.available).toLowerCase();
-      available = ['true'].includes(availableValue);
-    }
-
-    return {
-      name: String(row.name).trim(),
-      author: String(row.author).trim(),
-      publisher: String(row.publisher).trim(),
-      description: String(row.description).trim(),
-      category: String(row.category).trim(),
-      available,
-    };
-  }
-
-  private getMissingFields(row: any): string[] {
-    const requiredFields = [
-      'name',
-      'author',
-      'publisher',
-      'description',
-      'category',
-    ];
-    
-    return requiredFields.filter((field) => !row[field]?.toString().trim());
   }
 
   private async generateUniqueEAN13(): Promise<string> {

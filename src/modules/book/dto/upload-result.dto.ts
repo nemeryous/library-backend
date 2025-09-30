@@ -3,19 +3,19 @@ import { UploadResult } from '../domain/upload-result';
 
 export class UploadResultDto {
   @ApiProperty()
-  success: number;
+  status: 'success' | 'error';
 
   @ApiProperty()
-  failed: number;
+  message: string;
 
-  @ApiProperty({ type: [String] })
-  errors: string[];
+  @ApiProperty()
+  count?: number;
 
   static fromUploadResult(uploadResult: UploadResult): UploadResultDto {
     return {
-      success: uploadResult.success,
-      failed: uploadResult.failed,
-      errors: uploadResult.errors,
+      status: uploadResult.status,
+      message: uploadResult.message,
+      count: uploadResult.count,
     };
   }
 }

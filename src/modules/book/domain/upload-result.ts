@@ -1,7 +1,7 @@
 export class UploadResult {
-  success: number;
+  status: 'success' | 'error';
 
-  failed: number;
+  message: string;
 
-  errors: string[];
+  count?: number;
 }
