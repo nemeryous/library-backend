@@ -73,8 +73,7 @@ export class BookService {
 
     const jsonData = XLSX.utils.sheet_to_json(worksheet) as BookCreate[];
 
-    if (jsonData.length === 0)
-      throw new BadRequestException('Excel file is empty');
+    if (jsonData.length === 0) throw new BadRequestException('Excel file is empty');
 
     let success = 0;
     let failed = 0;
