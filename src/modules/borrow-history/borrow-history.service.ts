@@ -10,6 +10,8 @@ import { BorrowStatusEnum } from 'src/utils/BorrowStatusEnum';
 import { Book } from '../book/domain/book';
 import { BookBorrowHistoryDto } from './dto/book-borrow-history.dto';
 import { BookBorrowHistory } from './domain/book-borrow-history';
+import * as XLSX from 'xlsx';
+import { ExcelBorrowHistoryData } from './domain/excel-borrow-history-data';
 
 @Injectable()
 export class BorrowHistoryService {
@@ -20,7 +22,7 @@ export class BorrowHistoryService {
     private readonly bookRepository: Repository<BookEntity>,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
-  ) {}
+  ) { }
 
   async findAll(): Promise<BorrowHistory[]> {
     return BorrowHistory.fromEntities(
@@ -124,6 +126,37 @@ export class BorrowHistoryService {
     return await this.bookRepository.findBy({
       id: In(borrowHistoryEntities.map((bh) => bh.bookId)),
     });
+  }
+
+  async exportByUser(userId: number): Promise<Buffer> {
+    const histories = await this.borrowHistoryRepository.find({
+      where: { userId },
+      relations: { book: true, user: true },
+      order: { status: 'ASC', borrowDate: 'DESC' },
+    });
+
+    const data = this.prepareDataForExcel(histories);
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Borrow History');
+
+    return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+  }
+
+  private prepareDataForExcel(histories: BorrowHistoryEntity[]): ExcelBorrowHistoryData[] {
+    return histories.map((history) => ({
+      Name: history.book.name,
+      Code: history.book.code,
+      Author: history.book.author,
+      Publisher: history.book.publisher,
+      Category: history.book.category,
+      'Borrow Date': history.borrowDate.toISOString(),
+      'Return Date': history.returnDate
+        ? history.returnDate.toISOString()
+        : 'Not returned',
+      Status: history.status,
+    }));
   }
 
   private async findBookOrThrow(id: number): Promise<BookEntity> {

@@ -3,8 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { BorrowHistoryEntity } from './entity/borrow-history.entity';
 import { BookEntity } from '../book/entity/book.entity';
 import { UserEntity } from '../user/entity/user.entity';
-import { BorrowHistoryController } from './borrowhistory.controller';
-import { BorrowHistoryService } from './borrowhistory.service';
+import { BorrowHistoryController } from './borrow-history.controller';
+import { BorrowHistoryService } from './borrow-history.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([BorrowHistoryEntity, BookEntity, UserEntity])],
@@ -12,4 +12,4 @@ import { BorrowHistoryService } from './borrowhistory.service';
   providers: [BorrowHistoryService],
   exports: [BorrowHistoryService],
 })
-export class BorrowHistoryModule {}
+export class BorrowHistoryModule { }

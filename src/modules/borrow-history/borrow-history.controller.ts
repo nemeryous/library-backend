@@ -1,16 +1,30 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
-import { BorrowHistoryService } from './borrowhistory.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import type { Response } from 'express';
+import { BorrowHistoryService } from './borrow-history.service';
 import { BorrowHistoryDto } from './dto/borrow-history.dto';
 import { BorrowBookDto } from './dto/borrow-book.dto';
 import { BookItemDto } from '../book/dto/book-item.dto';
 import { BookDetailDto } from '../book/dto/book-detail.dto';
 import { BookBorrowHistoryDto } from './dto/book-borrow-history.dto';
+import { RequireLoggedIn } from 'src/guards/role-container';
+import { AuthGuard } from '@nestjs/passport';
+import { AuthUser } from 'src/decorator/auth-user.decorator';
+import type { IAuthUser } from 'src/decorator/auth-user.decorator';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Borrow History')
 @Controller('borrows')
 export class BorrowHistoryController {
-  constructor(private readonly borrowHistoryService: BorrowHistoryService) {}
+  constructor(private readonly borrowHistoryService: BorrowHistoryService) { }
 
   @Get()
   async findAll(): Promise<BorrowHistoryDto[]> {
@@ -53,5 +67,22 @@ export class BorrowHistoryController {
     return BorrowHistoryDto.fromBorrowHistory(
       await this.borrowHistoryService.remove(id),
     );
+  }
+
+  @Get('histories/export')
+  @RequireLoggedIn()
+  async exportMyHistory(
+    @AuthUser() user: IAuthUser,
+    @Res() res: Response,
+  ): Promise<void> {
+    const buffer = await this.borrowHistoryService.exportByUser(user.id);
+
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename="my-borrow-history.xlsx"',
+      'Content-Length': buffer.length.toString(),
+    });
+
+    res.send(buffer);
   }
 }
