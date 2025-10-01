@@ -11,6 +11,7 @@ import { Book } from '../book/domain/book';
 import { BookBorrowHistoryDto } from './dto/book-borrow-history.dto';
 import { BookBorrowHistory } from './domain/book-borrow-history';
 import * as XLSX from 'xlsx';
+import { ExcelBorrowHistoryData } from './domain/excel-borrow-history-data';
 
 @Injectable()
 export class BorrowHistoryService {
@@ -21,7 +22,7 @@ export class BorrowHistoryService {
     private readonly bookRepository: Repository<BookEntity>,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
-  ) {}
+  ) { }
 
   async findAll(): Promise<BorrowHistory[]> {
     return BorrowHistory.fromEntities(
@@ -131,6 +132,7 @@ export class BorrowHistoryService {
     const histories = await this.borrowHistoryRepository.find({
       where: { userId },
       relations: { book: true, user: true },
+      order: { status: 'ASC', borrowDate: 'DESC' },
     });
 
     const data = this.prepareDataForExcel(histories);
@@ -142,7 +144,7 @@ export class BorrowHistoryService {
     return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
   }
 
-  private prepareDataForExcel(histories: BorrowHistoryEntity[]): any[] {
+  private prepareDataForExcel(histories: BorrowHistoryEntity[]): ExcelBorrowHistoryData[] {
     return histories.map((history) => ({
       Name: history.book.name,
       Code: history.book.code,

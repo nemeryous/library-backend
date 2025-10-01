@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { BorrowHistoryService } from './borrowhistory.service';
+import { BorrowHistoryService } from './borrow-history.service';
 import { BorrowHistoryDto } from './dto/borrow-history.dto';
 import { BorrowBookDto } from './dto/borrow-book.dto';
 import { BookItemDto } from '../book/dto/book-item.dto';
@@ -19,9 +19,10 @@ import { RequireLoggedIn } from 'src/guards/role-container';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthUser } from 'src/decorator/auth-user.decorator';
 import type { IAuthUser } from 'src/decorator/auth-user.decorator';
+
 @Controller('borrows')
 export class BorrowHistoryController {
-  constructor(private readonly borrowHistoryService: BorrowHistoryService) {}
+  constructor(private readonly borrowHistoryService: BorrowHistoryService) { }
 
   @Get()
   async findAll(): Promise<BorrowHistoryDto[]> {
@@ -66,9 +67,8 @@ export class BorrowHistoryController {
     );
   }
 
-  @Get('export/my-history')
+  @Get('histories/export')
   @RequireLoggedIn()
-  @UseGuards(AuthGuard('jwt'))
   async exportMyHistory(
     @AuthUser() user: IAuthUser,
     @Res() res: Response,
@@ -82,7 +82,5 @@ export class BorrowHistoryController {
     });
 
     res.send(buffer);
-
-    return;
   }
 }
