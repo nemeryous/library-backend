@@ -7,6 +7,9 @@ import {
   Post,
   Put,
   Query,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { BookService } from './book.service';
 import { BookCreateDto } from './dto/book-create.dto';
@@ -14,6 +17,10 @@ import { BookUpdateDto } from './dto/book-update.dto';
 import { BookItemDto } from './dto/book-item.dto';
 import { BookDetailDto } from './dto/book-detail.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { AuthGuard } from '@nestjs/passport';
+import { RequireAdmin } from 'src/guards/role-container';
+import { UploadResultDto } from './dto/upload-result.dto';
 
 @ApiTags('Books')
 @Controller('books')
@@ -62,5 +69,17 @@ export class BookController {
   @Delete(':id')
   async remove(@Param('id') id: number): Promise<void> {
     await this.bookService.remove(id);
+  }
+
+  @Post('upload-excel')
+  @UseInterceptors(FileInterceptor('file'))
+  @UseGuards(AuthGuard('jwt'))
+  @RequireAdmin()
+  async uploadExcel(
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<UploadResultDto> {
+    return UploadResultDto.fromUploadResult(
+      await this.bookService.uploadBooks(file),
+    );
   }
 }

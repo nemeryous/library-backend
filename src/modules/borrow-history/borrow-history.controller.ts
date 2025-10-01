@@ -19,7 +19,9 @@ import { RequireLoggedIn } from 'src/guards/role-container';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthUser } from 'src/decorator/auth-user.decorator';
 import type { IAuthUser } from 'src/decorator/auth-user.decorator';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Borrow History')
 @Controller('borrows')
 export class BorrowHistoryController {
   constructor(private readonly borrowHistoryService: BorrowHistoryService) { }
