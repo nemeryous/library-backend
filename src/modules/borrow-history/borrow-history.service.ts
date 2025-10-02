@@ -211,8 +211,6 @@ export class BorrowHistoryService {
     await this.emailService.sendOverdueReminder(history.user, history.book, daysOverdue);
   }
 
-
-
   private async findBookOrThrow(id: number): Promise<BookEntity> {
     const book = await this.bookRepository.findOneBy({ id });
 

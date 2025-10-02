@@ -6,6 +6,9 @@ import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
 import path from 'path';
 import * as fs from 'fs/promises';
+import { ApiConfigService } from '../../shared/services/api-config.service';
+import { renderStringTemplate } from 'src/utils/string-utils';
+import { extractText } from '../../utils/string-utils';
 
 @Injectable()
 export class EmailService implements OnModuleInit {
@@ -14,13 +17,12 @@ export class EmailService implements OnModuleInit {
   private transporter: nodemailer.Transporter;
 
   constructor(
-    private readonly configService: ConfigService
+    private readonly apiConfigService: ApiConfigService,
   ) {
   }
 
   async onModuleInit() {
-    const gmailUser = this.configService.get<string>('GMAIL_USER');
-    const gmailPassword = this.configService.get<string>('GMAIL_PASSWORD');
+    const { gmailUser, gmailPassword } = this.apiConfigService.smtpConfig;
 
     if (gmailUser && gmailPassword) {
       this.transporter = nodemailer.createTransport({
@@ -43,6 +45,7 @@ export class EmailService implements OnModuleInit {
 
       return;
     }
+
     try {
       const templateData = {
         userName: user.firstName,
@@ -52,8 +55,10 @@ export class EmailService implements OnModuleInit {
 
       const { subject, html } = await this.renderTemplate('overdue-reminder', templateData);
 
+      const { gmailUser } = this.apiConfigService.smtpConfig;
+
       const mailOptions = {
-        from: `"Thư viện Library" <${process.env.GMAIL_USER}>`,
+        from: `"Thư viện Library" <${gmailUser}>`,
         to: user.email,
         subject: subject,
         html: html,
@@ -73,24 +78,16 @@ export class EmailService implements OnModuleInit {
     data: Record<string, string>,
   ): Promise<{ subject: string; html: string }> {
     const templatePath = path.join(__dirname, '..', '..', 'templates', 'email', `${templateName}.template.html`);
-    const initialContent = await fs.readFile(templatePath, 'utf-8');
+    const emailTemplate = await fs.readFile(templatePath, 'utf-8');
 
-    const titleMatch = initialContent.match(/<title>(.*?)<\/title>/);
-    const initialSubject = titleMatch ? titleMatch[1] : 'No Subject';
-    const initialHtml = initialContent.replace(/<title>.*?<\/title>/, '');
+    const renderedContent = renderStringTemplate(emailTemplate, data);
 
-    const finalHtml = Object.entries(data).reduce((currentHtml, [key, value]) => {
-      const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
+    const titleRegex = /<title>(.*?)<\/title>/is;
 
-      return currentHtml.replace(regex, value);
-    }, initialHtml);
+    const subject = extractText(renderedContent, titleRegex) ?? 'No Subject';
 
-    const finalSubject = Object.entries(data).reduce((currentSubject, [key, value]) => {
-      const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
+    const html = renderedContent.replace(titleRegex, '');
 
-      return currentSubject.replace(regex, value);
-    }, initialSubject);
-
-    return { subject: finalSubject, html: finalHtml };
+    return { subject, html };
   }
 }

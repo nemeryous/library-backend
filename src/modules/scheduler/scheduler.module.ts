@@ -14,7 +14,6 @@ import { OverdueReminderScheduler } from './overdue-reminder-scheduler.service';
     BorrowHistoryModule,
     ScheduleModule.forRoot()
   ],
-  controllers: [],
   providers: [OverdueReminderScheduler],
   exports: [OverdueReminderScheduler]
 })
