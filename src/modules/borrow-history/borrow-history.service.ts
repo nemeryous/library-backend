@@ -12,6 +12,7 @@ import { BookBorrowHistory } from './domain/book-borrow-history';
 import * as XLSX from 'xlsx';
 import { ExcelBorrowHistoryData } from './domain/excel-borrow-history-data';
 import { EmailService } from '../email/email.service';
+import pLimit from 'p-limit';
 
 @Injectable()
 export class BorrowHistoryService {
@@ -193,21 +194,21 @@ export class BorrowHistoryService {
   }
 
   private async sendRemindersInChunks(histories: BorrowHistoryEntity[]): Promise<void> {
-    const CHUNK_SIZE = 10;
+    const limit = pLimit(10);
 
-    for (let i = 0; i < histories.length; i += CHUNK_SIZE) {
-      const chunk = histories.slice(i, i + CHUNK_SIZE);
+    const emailPromises = histories.map((history) => {
+      return limit(() => this.sendReminderForHistory(history));
+    });
 
-      await Promise.all(chunk.map((history) => this.sendReminderForHistory(history)));
-    }
+    await Promise.all(emailPromises);
   }
 
-  private sendReminderForHistory(history: BorrowHistoryEntity): Promise<void> {
+  private async sendReminderForHistory(history: BorrowHistoryEntity): Promise<void> {
     const today = new Date();
     const borrowDate = new Date(history.borrowDate);
     const daysOverdue = Math.floor((today.getTime() - borrowDate.getTime()) / (1000 * 3600 * 24)) - 14;
 
-    return this.emailService.sendOverdueReminder(history.user, history.book, daysOverdue);
+    await this.emailService.sendOverdueReminder(history.user, history.book, daysOverdue);
   }
 
 

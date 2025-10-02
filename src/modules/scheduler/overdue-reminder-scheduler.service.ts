@@ -14,8 +14,10 @@ export class OverdueReminderScheduler {
 
   @Cron(CronExpression.EVERY_DAY_AT_9AM, { name: 'sendOverdueReminders', timeZone: 'Asia/Ho_Chi_Minh' })
   async handleoverdueReminders() {
-    this.logger.debug('Running sendOverdueReminders task');
-
-    await this.borrowHistoryService.checkAndSendOverdueReminders();
+    try {
+      await this.borrowHistoryService.checkAndSendOverdueReminders();
+    } catch (error) {
+      this.logger.error('Error sending overdue reminders', error);
+    }
   }
 }
