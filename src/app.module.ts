@@ -3,7 +3,7 @@ import { AuthService } from './modules/auth/auth.service';
 import { AuthController } from './modules/auth/auth.controller';
 import { KeycloakModule } from './modules/keycloak/keycloak.module';
 import { KeycloakService } from './modules/keycloak/keycloak.service';
-import { BorrowHistoryModule } from './modules/borrow-history/borrowhistory.module';
+import { BorrowHistoryModule } from './modules/borrow-history/borrow-history.module';
 import { UserModule } from './modules/user/user.module';
 import { SharedModule } from './shared/shared.module';
 import { Module } from '@nestjs/common';
@@ -19,6 +19,8 @@ import {
   RoleGuard,
 } from 'nest-keycloak-connect';
 import { APP_GUARD } from '@nestjs/core';
+import { SchedulerModule } from './modules/scheduler/scheduler.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -28,7 +30,11 @@ import { APP_GUARD } from '@nestjs/core';
     BorrowHistoryModule,
     UserModule,
     BookModule,
-    ConfigModule.forRoot(),
+    SchedulerModule,
+    
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.TZ_DB_HOST || 'localhost',
@@ -49,19 +55,6 @@ import { APP_GUARD } from '@nestjs/core';
   controllers: [AppController],
   providers: [
     AppService,
-    // Comment out Keycloak guards for testing
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: AuthGuard,
-    // },
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: ResourceGuard,
-    // },
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: RoleGuard,
-    // },
   ],
 })
-export class AppModule {}
+export class AppModule { }
