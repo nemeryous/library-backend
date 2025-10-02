@@ -15,6 +15,7 @@ export class SchedulerService {
   @Cron('08 11 * * *', { name: 'sendOverdueReminders', timeZone: 'Asia/Ho_Chi_Minh' })
   async handleoverdueReminders() {
     this.logger.debug('Running sendOverdueReminders task');
+
     await this.borrowHistoryService.checkAndSendOverdueReminders();
   }
 }

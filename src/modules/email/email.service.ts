@@ -36,6 +36,7 @@ export class EmailService {
   async sendOverdueReminder(user: User, book: Book, daysOverdue: number): Promise<void> {
     if (!this.transporter) {
       this.logger.error('Cannot send email, transporter is not configured.');
+
       return;
     }
 
@@ -56,6 +57,7 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail(mailOptions);
+      
       this.logger.log(`Sent overdue reminder to ${user.email} for book "${book.name}"`);
     } catch (error) {
       this.logger.error(`Failed to send email to ${user.email}`, error.stack);

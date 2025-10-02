@@ -167,7 +167,7 @@ export class BorrowHistoryService {
 
   async checkAndSendOverdueReminders(): Promise<void> {
     const twoWeeksAgo = new Date();
-    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 1);
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
 
     const overdueHistories = await this.borrowHistoryRepository.find({
       where: {
@@ -178,6 +178,7 @@ export class BorrowHistoryService {
         user: true,
         book: true,
       },
+      order: { borrowDate: 'ASC' },
     });
 
     if (overdueHistories.length === 0) {
@@ -190,7 +191,7 @@ export class BorrowHistoryService {
     for (const history of overdueHistories) {
       const today = new Date();
       const borrowDate = new Date(history.borrowDate);
-      const daysOverdue = Math.floor((today.getTime() - borrowDate.getTime()) / (1000 * 3600 * 24)) - 1;
+      const daysOverdue = Math.floor((today.getTime() - borrowDate.getTime()) / (1000 * 3600 * 24)) - 14;
 
       await this.emailService.sendOverdueReminder(history.user, history.book, daysOverdue);
     }
