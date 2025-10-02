@@ -8,7 +8,12 @@ import { BorrowHistoryService } from './borrow-history.service';
 import { EmailModule } from '../email/email.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([BorrowHistoryEntity, BookEntity, UserEntity]), EmailModule],
+  imports: [TypeOrmModule.forFeature([
+    BorrowHistoryEntity,
+    BookEntity,
+    UserEntity
+  ]),
+    EmailModule],
   controllers: [BorrowHistoryController],
   providers: [BorrowHistoryService],
   exports: [BorrowHistoryService],

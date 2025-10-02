@@ -4,15 +4,15 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 
 
 @Injectable()
-export class SchedulerService {
-  private readonly logger = new Logger(SchedulerService.name);
+export class OverdueReminderScheduler {
+  private readonly logger = new Logger(OverdueReminderScheduler.name);
 
   constructor(
     private readonly borrowHistoryService: BorrowHistoryService,
   ) {
   }
 
-  @Cron('08 11 * * *', { name: 'sendOverdueReminders', timeZone: 'Asia/Ho_Chi_Minh' })
+  @Cron(CronExpression.EVERY_DAY_AT_9AM, { name: 'sendOverdueReminders', timeZone: 'Asia/Ho_Chi_Minh' })
   async handleoverdueReminders() {
     this.logger.debug('Running sendOverdueReminders task');
 

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
 import { User } from '../user/domain/user';
 import { Book } from '../book/domain/book';
@@ -6,15 +6,17 @@ import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class EmailService {
+export class EmailService implements OnModuleInit {
 
   private readonly logger = new Logger(EmailService.name);
-  private readonly transporter: nodemailer.Transporter;
+  private transporter: nodemailer.Transporter;
 
   constructor(
     private readonly configService: ConfigService
   ) {
+  }
 
+  async onModuleInit() {
     const gmailUser = this.configService.get<string>('GMAIL_USER');
     const gmailPassword = this.configService.get<string>('GMAIL_PASSWORD');
 
@@ -29,7 +31,7 @@ export class EmailService {
         },
       });
     } else {
-      this.logger.warn('EmailService has been initialized.', gmailUser, gmailPassword);
+      this.logger.warn('GMAIL_USER or GMAIL_PASSWORD is not set. Email functionality will be disabled.');
     }
   }
 
@@ -57,7 +59,7 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail(mailOptions);
-      
+
       this.logger.log(`Sent overdue reminder to ${user.email} for book "${book.name}"`);
     } catch (error) {
       this.logger.error(`Failed to send email to ${user.email}`, error.stack);

@@ -13,14 +13,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { BookModule } from './modules/book/book.module';
 import {
-  AuthGuard,
   KeycloakConnectModule,
-  ResourceGuard,
-  RoleGuard,
 } from 'nest-keycloak-connect';
-import { APP_GUARD } from '@nestjs/core';
 import { SchedulerModule } from './modules/scheduler/scheduler.module';
-import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -31,7 +26,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     UserModule,
     BookModule,
     SchedulerModule,
-    
+
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -53,8 +48,6 @@ import { ScheduleModule } from '@nestjs/schedule';
     }),
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-  ],
+  providers: [AppService],
 })
 export class AppModule { }

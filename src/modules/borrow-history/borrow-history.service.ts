@@ -8,7 +8,6 @@ import { BookEntity } from '../book/entity/book.entity';
 import { UserEntity } from '../user/entity/user.entity';
 import { BorrowStatusEnum } from 'src/utils/BorrowStatusEnum';
 import { Book } from '../book/domain/book';
-import { BookBorrowHistoryDto } from './dto/book-borrow-history.dto';
 import { BookBorrowHistory } from './domain/book-borrow-history';
 import * as XLSX from 'xlsx';
 import { ExcelBorrowHistoryData } from './domain/excel-borrow-history-data';
@@ -188,14 +187,30 @@ export class BorrowHistoryService {
 
     this.logger.log(`Tìm thấy ${overdueHistories.length} lượt mượn sách quá hạn. Bắt đầu gửi email...`);
 
-    for (const history of overdueHistories) {
-      const today = new Date();
-      const borrowDate = new Date(history.borrowDate);
-      const daysOverdue = Math.floor((today.getTime() - borrowDate.getTime()) / (1000 * 3600 * 24)) - 14;
+    await this.sendRemindersInChunks(overdueHistories);
 
-      await this.emailService.sendOverdueReminder(history.user, history.book, daysOverdue);
+    this.logger.log('Hoàn thành việc gửi email nhắc nhở.');
+  }
+
+  private async sendRemindersInChunks(histories: BorrowHistoryEntity[]): Promise<void> {
+    const CHUNK_SIZE = 10;
+
+    for (let i = 0; i < histories.length; i += CHUNK_SIZE) {
+      const chunk = histories.slice(i, i + CHUNK_SIZE);
+
+      await Promise.all(chunk.map((history) => this.sendReminderForHistory(history)));
     }
   }
+
+  private sendReminderForHistory(history: BorrowHistoryEntity): Promise<void> {
+    const today = new Date();
+    const borrowDate = new Date(history.borrowDate);
+    const daysOverdue = Math.floor((today.getTime() - borrowDate.getTime()) / (1000 * 3600 * 24)) - 14;
+
+    return this.emailService.sendOverdueReminder(history.user, history.book, daysOverdue);
+  }
+
+
 
   private async findBookOrThrow(id: number): Promise<BookEntity> {
     const book = await this.bookRepository.findOneBy({ id });
