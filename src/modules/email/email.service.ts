@@ -80,13 +80,12 @@ export class EmailService implements OnModuleInit {
     const templatePath = path.join(__dirname, '..', '..', 'templates', 'email', `${templateName}.template.html`);
     const emailTemplate = await fs.readFile(templatePath, 'utf-8');
 
-    const renderedContent = renderStringTemplate(emailTemplate, data);
 
     const titleRegex = /<title>(.*?)<\/title>/is;
 
-    const subject = extractText(renderedContent, titleRegex) ?? 'No Subject';
+    const subject = extractText(emailTemplate, titleRegex) ?? 'No Subject';
 
-    const html = renderedContent.replace(titleRegex, '');
+    const html = renderStringTemplate(emailTemplate, data);
 
     return { subject, html };
   }
