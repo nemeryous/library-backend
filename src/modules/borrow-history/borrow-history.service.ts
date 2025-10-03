@@ -1,20 +1,25 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BorrowHistoryEntity } from './entity/borrow-history.entity';
-import { In, Repository } from 'typeorm';
+import { In, LessThan, Repository } from 'typeorm';
 import { BorrowHistory } from './domain/borrow-history';
 import { BorrowBook } from './domain/borrow-book';
 import { BookEntity } from '../book/entity/book.entity';
 import { UserEntity } from '../user/entity/user.entity';
 import { BorrowStatusEnum } from 'src/utils/BorrowStatusEnum';
 import { Book } from '../book/domain/book';
-import { BookBorrowHistoryDto } from './dto/book-borrow-history.dto';
 import { BookBorrowHistory } from './domain/book-borrow-history';
 import * as XLSX from 'xlsx';
 import { ExcelBorrowHistoryData } from './domain/excel-borrow-history-data';
+import { EmailService } from '../email/email.service';
+import pLimit from 'p-limit';
 
 @Injectable()
 export class BorrowHistoryService {
+
+  private readonly logger = new Logger(BorrowHistoryService.name);
+
+
   constructor(
     @InjectRepository(BorrowHistoryEntity)
     private readonly borrowHistoryRepository: Repository<BorrowHistoryEntity>,
@@ -22,6 +27,7 @@ export class BorrowHistoryService {
     private readonly bookRepository: Repository<BookEntity>,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
+    private readonly emailService: EmailService,
   ) { }
 
   async findAll(): Promise<BorrowHistory[]> {
@@ -157,6 +163,52 @@ export class BorrowHistoryService {
         : 'Not returned',
       Status: history.status,
     }));
+  }
+
+  async checkAndSendOverdueReminders(): Promise<void> {
+    const twoWeeksAgo = new Date();
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+    const overdueHistories = await this.borrowHistoryRepository.find({
+      where: {
+        status: BorrowStatusEnum.BORROWED,
+        borrowDate: LessThan(twoWeeksAgo),
+      },
+      relations: {
+        user: true,
+        book: true,
+      },
+      order: { borrowDate: 'ASC' },
+    });
+
+    if (overdueHistories.length === 0) {
+      this.logger.log('Không tìm thấy sách nào quá hạn.');
+      return;
+    }
+
+    this.logger.log(`Tìm thấy ${overdueHistories.length} lượt mượn sách quá hạn. Bắt đầu gửi email...`);
+
+    await this.sendRemindersInChunks(overdueHistories);
+
+    this.logger.log('Hoàn thành việc gửi email nhắc nhở.');
+  }
+
+  private async sendRemindersInChunks(histories: BorrowHistoryEntity[]): Promise<void> {
+    const limit = pLimit(10);
+
+    const emailPromises = histories.map((history) => {
+      return limit(() => this.sendReminderForHistory(history));
+    });
+
+    await Promise.all(emailPromises);
+  }
+
+  private async sendReminderForHistory(history: BorrowHistoryEntity): Promise<void> {
+    const today = new Date();
+    const borrowDate = new Date(history.borrowDate);
+    const daysOverdue = Math.floor((today.getTime() - borrowDate.getTime()) / (1000 * 3600 * 24)) - 14;
+
+    await this.emailService.sendOverdueReminder(history.user, history.book, daysOverdue);
   }
 
   private async findBookOrThrow(id: number): Promise<BookEntity> {

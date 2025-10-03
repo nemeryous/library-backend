@@ -4,7 +4,7 @@ import { isNil } from 'src/utils/helpers';
 
 @Injectable()
 export class ApiConfigService {
-  constructor(private configService: ConfigService) {}
+  constructor(private configService: ConfigService) { }
 
   get apiDomain(): string {
     return this.getString('API_DOMAIN');
@@ -30,6 +30,13 @@ export class ApiConfigService {
       clientSecret: this.getString('KEYCLOAK_CLIENT_SECRET'),
       baseUrl: this.getString('KEYCLOAK_BASE_URL'),
       realmName: this.getString('KEYCLOAK_REALM_NAME'),
+    };
+  }
+
+  get smtpConfig() {
+    return {
+      gmailUser: this.getString('GMAIL_USER'),
+      gmailPassword: this.getString('GMAIL_PASSWORD'),
     };
   }
 
