@@ -20,6 +20,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import { KeycloakService } from '../keycloak/keycloak.service';
+import { KeycloakLoginDto } from './dto/keycloak-login.dto';
 
 
 @ApiTags('Auth')
@@ -67,10 +68,10 @@ export class AuthController {
   }
 
   @Post('keycloak/login')
-  async keycloakLogin(@Body('access_token') accessToken: string) {
+  async keycloakLogin(@Body('access_token') accessToken: string): Promise<KeycloakLoginDto> {
     if (!accessToken) {
       throw new Error('Access token is required');
     }
-    return await this.authService.loginWithGoogle(accessToken);
+    return KeycloakLoginDto.fromKeycloakLogin(await this.authService.loginWithGoogle(accessToken));
   }
 }

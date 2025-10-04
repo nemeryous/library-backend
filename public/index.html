@@ -205,7 +205,6 @@
                 showLoading(true);
                 console.log('🔄 Exchanging code for token...');
 
-                // Verify state parameter
                 const savedState = localStorage.getItem('oauth_state');
                 if (state !== savedState) {
                     throw new Error('Invalid state parameter');
@@ -213,7 +212,6 @@
 
                 const redirectUri = 'http://localhost:3000/public/index.html';
 
-                // Exchange authorization code for access token (Public client)
                 const tokenResponse = await fetch(`${KEYCLOAK_CONFIG.url}/realms/${KEYCLOAK_CONFIG.realm}/protocol/openid-connect/token`, {
                     method: 'POST',
                     headers: {
@@ -238,7 +236,6 @@
                 const tokenData = await tokenResponse.json();
                 console.log('✅ Token received');
                 
-                // Send Keycloak token to your backend
                 console.log('🔌 Authenticating with backend...');
                 const backendResponse = await fetch('/api/v1/auths/keycloak/login', {
                     method: 'POST',
@@ -250,8 +247,6 @@
                     }),
                 });
 
-                console.log('🏠 Backend response status:', backendResponse.status);
-
                 if (!backendResponse.ok) {
                     const errorData = await backendResponse.text();
                     console.error('❌ Backend auth failed:', errorData);
@@ -259,19 +254,17 @@
                 }
 
                 const userData = await backendResponse.json();
-                console.log('✅ Backend authentication successful');
+                console.log('✅ Backend authentication successful', userData);
                 
                 if (userData.success) {
-                    // Store tokens
                     localStorage.setItem('access_token', userData.access_token);
                     localStorage.setItem('refresh_token', userData.refresh_token);
                     localStorage.setItem('user_info', JSON.stringify(userData.user));
-                    localStorage.removeItem('oauth_state'); // Clean up state
+                    localStorage.removeItem('oauth_state');
                     
                     currentUser = userData.user;
                     showUserInfo(currentUser);
                     
-                    // Clean up URL
                     window.history.replaceState({}, document.title, window.location.pathname);
                 } else {
                     throw new Error('Login failed: Invalid response');
