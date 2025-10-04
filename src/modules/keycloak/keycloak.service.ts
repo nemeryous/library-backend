@@ -1,18 +1,22 @@
-import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, Injectable, OnModuleInit, Logger, UnauthorizedException } from '@nestjs/common';
 import { KeycloakAdminClient } from '@s3pweb/keycloak-admin-client-cjs';
 import { ApiConfigService } from 'src/shared/services/api-config.service';
-import { ppid } from 'process';
 import { LoginForm } from '../auth/domain/login-form';
 import { Token } from '../auth/domain/token';
 import axios from 'axios';
 import { AxiosError } from 'axios';
 import { KeycloakUserCreate } from './domain/keycloak-user-create';
+import * as jwt from 'jsonwebtoken';
+import { VerifiedKeycloakUser } from './domain/verified-keycloak-user';
+import { KeycloakUserInfo } from './domain/keycloak-user-info';
+
 
 @Injectable()
 export class KeycloakService implements OnModuleInit {
   private readonly kcAdminClient: KeycloakAdminClient;
+  private readonly logger = new Logger(KeycloakService.name);
 
-  constructor(private configService: ApiConfigService) {
+  constructor(private readonly configService: ApiConfigService) {
     this.kcAdminClient = new KeycloakAdminClient(
       this.configService.keycloakConfig,
     );
@@ -36,12 +40,12 @@ export class KeycloakService implements OnModuleInit {
         user.password == null
           ? undefined
           : [
-              {
-                type: 'password',
-                value: user.password,
-                temporary: false,
-              },
-            ],
+            {
+              type: 'password',
+              value: user.password,
+              temporary: false,
+            },
+          ],
     });
   }
 
@@ -65,6 +69,42 @@ export class KeycloakService implements OnModuleInit {
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
     });
+  }
+
+  async verifyKeycloakToken(accessToken: string): Promise<VerifiedKeycloakUser> {
+    try {
+      const { authServerUrl, realm } = this.configService.keycloakServerAndRealm;
+
+      const userInfoUrl = `${authServerUrl}/realms/${realm}/protocol/openid-connect/userinfo`;
+      const userResponse = await fetch(userInfoUrl, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!userResponse.ok) {
+        throw new UnauthorizedException('Invalid token or user info');
+      }
+
+      const userInfo: KeycloakUserInfo = await userResponse.json();
+
+      return this.mapKeycloakUserInfo(userInfo);
+
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new UnauthorizedException('Invalid Keycloak token');
+    }
+  }
+
+  private mapKeycloakUserInfo(userInfo: KeycloakUserInfo): VerifiedKeycloakUser {
+    return {
+      keycloakId: userInfo.sub,
+      email: userInfo.email,
+      firstName: userInfo.given_name || userInfo.name?.split(' ')[0] || '',
+      lastName: userInfo.family_name || userInfo.name?.split(' ').slice(1).join(' ') || '',
+    };
   }
 
   private async requestToken(body: any): Promise<Token> {

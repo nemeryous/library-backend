@@ -17,11 +17,21 @@ import { AuthUser } from 'src/decorator/auth-user.decorator';
 import { AuthResultDto } from './dto/auth-result.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags } from '@nestjs/swagger';
+import { JwtService } from '@nestjs/jwt';
+import { UserService } from '../user/user.service';
+import { KeycloakService } from '../keycloak/keycloak.service';
+import { KeycloakLoginDto } from './dto/keycloak-login.dto';
+
 
 @ApiTags('Auth')
 @Controller('auths')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly jwtService: JwtService,
+    private readonly userService: UserService,
+    private readonly keycloakService: KeycloakService
+  ) { }
 
   @Post('register')
   async register(@Body() registerDto: RegisterFormDto): Promise<AuthResultDto> {
@@ -55,5 +65,13 @@ export class AuthController {
   @RequireLoggedIn()
   getMe(@AuthUser() user: UserEntity): CurrentUserDto {
     return CurrentUserDto.fromUser(user);
+  }
+
+  @Post('keycloak/login')
+  async keycloakLogin(@Body('access_token') accessToken: string): Promise<KeycloakLoginDto> {
+    if (!accessToken) {
+      throw new Error('Access token is required');
+    }
+    return KeycloakLoginDto.fromKeycloakLogin(await this.authService.loginWithGoogle(accessToken));
   }
 }
