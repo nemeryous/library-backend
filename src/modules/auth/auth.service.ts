@@ -3,7 +3,6 @@ import { KeycloakService } from '../keycloak/keycloak.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from '../user/entity/user.entity';
 import { Repository } from 'typeorm';
-import { ApiConfigService } from 'src/shared/services/api-config.service';
 import { RegisterForm } from './domain/register-form';
 import { AuthResult } from './domain/auth-result';
 import { LoginForm } from './domain/login-form';
@@ -11,6 +10,11 @@ import { Token } from './domain/token';
 import { jwtDecode } from 'jwt-decode';
 import { TokenPayload } from './domain/token-payload';
 import { RefreshTokenForm } from './domain/refresh-token-form';
+import { UserService } from '../user/user.service';
+import { JwtService } from '@nestjs/jwt';
+import { KeycloakLogin } from './domain/keycloak-login';
+import { Keycloak } from 'keycloak-connect';
+
 
 @Injectable()
 export class AuthService {
@@ -18,7 +22,8 @@ export class AuthService {
     private readonly keycloakService: KeycloakService,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
-    private readonly apiConfigService: ApiConfigService,
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
   ) { }
 
   async register(registerForm: RegisterForm): Promise<AuthResult> {
@@ -65,6 +70,29 @@ export class AuthService {
     );
   }
 
+  async loginWithGoogle(accessToken: string): Promise<KeycloakLogin> {
+    const keycloakUser = await this.keycloakService.verifyKeycloakToken(accessToken);
+
+    const existingUser = await this.userRepository.findOneBy({
+      email: keycloakUser.email,
+    });
+
+    const keycloakAsRegisterForm = {
+      email: keycloakUser.email,
+      firstName: keycloakUser.firstName,
+      lastName: keycloakUser.lastName,
+      password: '',
+    };
+
+    const user = await this.updateOrCreateUser(
+      existingUser,
+      keycloakUser.keycloakId,
+      keycloakAsRegisterForm
+    );
+
+    return this.createKeycloakAuthResponse(user);
+  }
+
   private async createTokenForUser(
     token: Token,
     userOptional: Partial<UserEntity> = {},
@@ -88,6 +116,39 @@ export class AuthService {
       email: token.email,
       firstName: token.given_name,
       lastName: token.family_name,
+    };
+  }
+
+  private createKeycloakAuthResponse(user: UserEntity): KeycloakLogin {
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      keycloakId: user.keyCloakId,
+    };
+
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '1h' });
+    const refreshToken = this.jwtService.sign(
+      { sub: user.id },
+      { expiresIn: '7d' }
+    );
+
+    return {
+      success: true,
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      token_type: 'Bearer',
+      expires_in: 3600,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        keyCloakId: user.keyCloakId,
+      },
     };
   }
 

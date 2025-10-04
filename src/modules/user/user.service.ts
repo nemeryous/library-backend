@@ -4,13 +4,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from './entity/user.entity';
 import { User } from './domain/user';
 import { UserRequest } from './domain/user-request';
+import { KeycloakUser } from './domain/keycloak-user';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
-  ) {}
+  ) { }
 
   async findAll(): Promise<User[]> {
     return User.fromEntities(await this.userRepository.find());
@@ -39,6 +40,26 @@ export class UserService {
 
   async delete(id: number): Promise<void> {
     await this.userRepository.delete(await this.findOneOrThrow(id));
+  }
+
+  async createFromKeycloak(keycloakUser: KeycloakUser): Promise<User> {
+    return User.fromEntity(
+      await this.create({
+      ...KeycloakUser.toUserRequest(keycloakUser),
+        keycloakId: keycloakUser.keycloakId,
+      }));
+  }
+
+  async findByKeycloakId(keycloakId: string): Promise<UserEntity | null> {
+    return await this.userRepository.findOne({
+      where: { keyCloakId: keycloakId }
+    });
+  }
+
+  async findByEmail(email: string): Promise<UserEntity | null> {
+    return await this.userRepository.findOne({
+      where: { email }
+    });
   }
 
   private async findOneOrThrow(id: number): Promise<UserEntity> {

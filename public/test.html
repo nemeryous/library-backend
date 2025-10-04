@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Keycloak Google OAuth</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .btn { background: #4285f4; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; margin: 10px 0; }
+        .result { margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 4px; }
+        .error { background: #ffe6e6; color: #d00; }
+        .success { background: #e6ffe6; color: #080; }
+    </style>
+</head>
+<body>
+    <h2>🔍 Test Keycloak + Google OAuth</h2>
+    
+    <button class="btn" onclick="testKeycloakLogin()">
+        🔐 Test Keycloak Login (Force Google)
+    </button>
+    
+    <button class="btn" onclick="testKeycloakLoginNormal()">
+        🏠 Test Keycloak Login (Normal)
+    </button>
+    
+    <button class="btn" onclick="clearTest()">
+        🧹 Clear Results
+    </button>
+
+    <div id="result" class="result" style="display: none;"></div>
+
+    <script>
+        const KEYCLOAK_CONFIG = {
+            url: 'http://localhost:8080',
+            realm: 'nestjs-library-app',
+            clientId: 'nestjs-library-frontend'
+        };
+
+        function log(message, data = null) {
+            console.log(`[${new Date().toLocaleTimeString()}] ${message}`, data);
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML += `<div><strong>${message}</strong>${data ? '<br><pre>' + JSON.stringify(data, null, 2) + '</pre>' : ''}</div><hr>`;
+        }
+
+        function clearTest() {
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('result').innerHTML = '';
+            localStorage.removeItem('oauth_state');
+            console.clear();
+        }
+
+        function generateRandomState() {
+            const state = Math.random().toString(36).substring(2, 15);
+            localStorage.setItem('oauth_state', state);
+            return state;
+        }
+
+        function testKeycloakLogin() {
+            try {
+                log('🚀 Starting Keycloak login with forced Google...');
+                
+                const redirectUri = 'http://localhost:3000/public/test.html';
+                const state = generateRandomState();
+                
+                const params = new URLSearchParams({
+                    client_id: KEYCLOAK_CONFIG.clientId,
+                    redirect_uri: redirectUri,
+                    response_type: 'code',
+                    scope: 'openid profile email',
+                    state: state,
+                    kc_idp_hint: 'google' // Force Google
+                });
+
+                const authUrl = `${KEYCLOAK_CONFIG.url}/realms/${KEYCLOAK_CONFIG.realm}/protocol/openid-connect/auth?${params}`;
+                
+                log('🔗 Auth URL built', { authUrl, redirectUri, state });
+                
+                // Redirect
+                window.location.href = authUrl;
+                
+            } catch (error) {
+                log('❌ Error building auth URL', error.message);
+            }
+        }
+
+        function testKeycloakLoginNormal() {
+            try {
+                log('🚀 Starting normal Keycloak login...');
+                
+                const redirectUri = 'http://localhost:3000/public/test.html';
+                const state = generateRandomState();
+                
+                const params = new URLSearchParams({
+                    client_id: KEYCLOAK_CONFIG.clientId,
+                    redirect_uri: redirectUri,
+                    response_type: 'code',
+                    scope: 'openid profile email',
+                    state: state
+                });
+
+                const authUrl = `${KEYCLOAK_CONFIG.url}/realms/${KEYCLOAK_CONFIG.realm}/protocol/openid-connect/auth?${params}`;
+                
+                log('🔗 Auth URL built', { authUrl, redirectUri, state });
+                
+                window.location.href = authUrl;
+                
+            } catch (error) {
+                log('❌ Error building auth URL', error.message);
+            }
+        }
+
+        async function exchangeCodeForToken(code, state) {
+    try {
+        log('🔄 Exchanging code for token...', { code: code.substring(0, 20) + '...', state });
+
+        const savedState = localStorage.getItem('oauth_state');
+        if (state !== savedState) {
+            throw new Error('Invalid state parameter');
+        }
+
+        const redirectUri = 'http://localhost:3000/public/test.html';
+
+        // Public client - không cần client credentials
+        const tokenResponse = await fetch(`${KEYCLOAK_CONFIG.url}/realms/${KEYCLOAK_CONFIG.realm}/protocol/openid-connect/token`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                grant_type: 'authorization_code',
+                client_id: KEYCLOAK_CONFIG.clientId, // Chỉ client_id, không có secret
+                code: code,
+                redirect_uri: redirectUri,
+                // Không có client_secret cho public client
+            }),
+        });
+
+        log('📡 Token response status', tokenResponse.status);
+
+        if (!tokenResponse.ok) {
+            const errorText = await tokenResponse.text();
+            log('❌ Token exchange failed', errorText);
+            throw new Error(`Token exchange failed: ${errorText}`);
+        }
+
+        const tokenData = await tokenResponse.json();
+        log('✅ Token received', {
+            access_token: tokenData.access_token ? 'Present' : 'Missing',
+            id_token: tokenData.id_token ? 'Present' : 'Missing',
+            token_type: tokenData.token_type,
+            expires_in: tokenData.expires_in
+        });
+
+        // Decode ID token để xem user info
+        if (tokenData.id_token) {
+            try {
+                const payload = JSON.parse(atob(tokenData.id_token.split('.')[1]));
+                log('👤 User info from ID token', payload);
+            } catch (e) {
+                log('⚠️ Could not decode ID token', e.message);
+            }
+        }
+
+        // Test your backend
+        await testBackendAuth(tokenData.access_token);
+
+    } catch (error) {
+        log('❌ Token exchange error', error.message);
+    }
+  }
+
+        async function testBackendAuth(accessToken) {
+            try {
+                log('🔌 Testing backend authentication...');
+
+                const response = await fetch('/api/v1/auths/keycloak/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        access_token: accessToken
+                    }),
+                });
+
+                log('🏠 Backend response status', response.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    log('❌ Backend auth failed', errorText);
+                    return;
+                }
+
+                const userData = await response.json();
+                log('✅ Backend authentication successful', userData);
+
+            } catch (error) {
+                log('❌ Backend test error', error.message);
+            }
+        }
+
+        // Handle callback
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
+            const error = urlParams.get('error');
+            const errorDescription = urlParams.get('error_description');
+            
+            if (error) {
+                log('❌ OAuth Error', { error, errorDescription });
+                document.getElementById('result').className = 'result error';
+                return;
+            }
+            
+            if (code) {
+                log('✅ Authorization code received');
+                document.getElementById('result').className = 'result success';
+                exchangeCodeForToken(code, state);
+                
+                // Clean URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return;
+            }
+
+            // No params - fresh page load
+            log('📄 Page loaded - ready for testing');
+        };
+    </script>
+</body>
+</html>

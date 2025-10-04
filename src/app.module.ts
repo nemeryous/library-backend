@@ -16,6 +16,9 @@ import {
   KeycloakConnectModule,
 } from 'nest-keycloak-connect';
 import { SchedulerModule } from './modules/scheduler/scheduler.module';
+import { EmailModule } from './modules/email/email.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -26,9 +29,13 @@ import { SchedulerModule } from './modules/scheduler/scheduler.module';
     UserModule,
     BookModule,
     SchedulerModule,
-
+    EmailModule,
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/public',
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',

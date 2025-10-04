@@ -33,6 +33,14 @@ export class ApiConfigService {
     };
   }
 
+  get jwtConfig() {
+    return {
+      secret: this.configService.get<string>('JWT_SECRET') || 'your-default-secret',
+      expiresIn: this.configService.get<string>('JWT_EXPIRES_IN') || '1h',
+      refreshExpiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d',
+    };
+  }
+
   get smtpConfig() {
     return {
       gmailUser: this.getString('GMAIL_USER'),
@@ -57,6 +65,13 @@ export class ApiConfigService {
     return {
       clientIds: this.getStringArray('APPLE_CLIENT_IDS'),
     };
+  }
+
+  get keycloakServerAndRealm() {
+    return {
+      authServerUrl: this.configService.get<string>('AUTH_SERVER_URL'),
+      realm: this.configService.get<string>('AUTH_REALM'),
+    }
   }
 
   get keycloakJwtConfig() {

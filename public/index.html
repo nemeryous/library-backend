@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library App - Login</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 500px; 
+            margin: 80px auto; 
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        h2 { 
+            color: #333; 
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .login-btn { 
+            background: #4285f4; 
+            color: white; 
+            border: none; 
+            padding: 15px 30px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 16px;
+            width: 100%;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .login-btn:hover {
+            background: #3367d6;
+        }
+        
+        .login-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .loading { 
+            margin: 20px 0; 
+            color: #666; 
+            display: none;
+            font-style: italic;
+        }
+        
+        .user-info { 
+            margin-top: 30px; 
+            padding: 20px; 
+            background: #f8f9fa; 
+            border-radius: 8px; 
+            display: none;
+            text-align: left;
+        }
+        
+        .user-info h3 {
+            margin-top: 0;
+            color: #28a745;
+            text-align: center;
+        }
+        
+        .user-info p {
+            margin: 10px 0;
+            color: #333;
+        }
+        
+        .user-info strong {
+            color: #495057;
+        }
+        
+        .logout-btn {
+            background: #dc3545; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 6px; 
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: background 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            background: #c82333;
+        }
+        
+        .error { 
+            margin: 20px 0; 
+            padding: 15px; 
+            background: #f8d7da; 
+            color: #721c24; 
+            border-radius: 6px; 
+            display: none;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .success {
+            margin: 20px 0;
+            padding: 15px;
+            background: #d4edda;
+            color: #155724;
+            border-radius: 6px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .app-title {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="app-title">📚 Library Management</h2>
+        <p class="subtitle">Please sign in with your Google account to continue</p>
+        
+        <button class="login-btn" onclick="loginWithKeycloak()" id="loginBtn">
+            <span>🔐</span>
+            <span>Login with Google</span>
+        </button>
+
+        <div id="loading" class="loading">
+            <span>🔄</span> Authenticating...
+        </div>
+
+        <div id="userInfo" class="user-info">
+            <h3>✅ Welcome!</h3>
+            <p><strong>Name:</strong> <span id="userName"></span></p>
+            <p><strong>Email:</strong> <span id="userEmail"></span></p>
+            <p><strong>Role:</strong> <span id="userRole"></span></p>
+            <p><strong>User ID:</strong> <span id="userId"></span></p>
+            
+            <button onclick="logout()" class="logout-btn">
+                🚪 Logout
+            </button>
+        </div>
+
+        <div id="error" class="error"></div>
+    </div>
+
+    <script>
+        const KEYCLOAK_CONFIG = {
+            url: 'http://localhost:8080',
+            realm: 'nestjs-library-app',
+            clientId: 'nestjs-library-frontend'
+        };
+
+        let currentUser = null;
+
+        function generateRandomState() {
+            const state = Math.random().toString(36).substring(2, 15);
+            localStorage.setItem('oauth_state', state);
+            return state;
+        }
+
+        function buildKeycloakAuthUrl() {
+            const redirectUri = 'http://localhost:3000/public/index.html';
+            const state = generateRandomState();
+            
+            const params = new URLSearchParams({
+                client_id: KEYCLOAK_CONFIG.clientId,
+                redirect_uri: redirectUri,
+                response_type: 'code',
+                scope: 'openid profile email',
+                state: state,
+                kc_idp_hint: 'google' // Force Google login
+            });
+
+            const authUrl = `${KEYCLOAK_CONFIG.url}/realms/${KEYCLOAK_CONFIG.realm}/protocol/openid-connect/auth?${params}`;
+            console.log('🔗 Auth URL built:', authUrl);
+            
+            return authUrl;
+        }
+
+        async function exchangeCodeForToken(code, state) {
+            try {
+                showLoading(true);
+                console.log('🔄 Exchanging code for token...');
+
+                // Verify state parameter
+                const savedState = localStorage.getItem('oauth_state');
+                if (state !== savedState) {
+                    throw new Error('Invalid state parameter');
+                }
+
+                const redirectUri = 'http://localhost:3000/public/index.html';
+
+                // Exchange authorization code for access token (Public client)
+                const tokenResponse = await fetch(`${KEYCLOAK_CONFIG.url}/realms/${KEYCLOAK_CONFIG.realm}/protocol/openid-connect/token`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        grant_type: 'authorization_code',
+                        client_id: KEYCLOAK_CONFIG.clientId,
+                        code: code,
+                        redirect_uri: redirectUri,
+                    }),
+                });
+
+                console.log('📡 Token response status:', tokenResponse.status);
+
+                if (!tokenResponse.ok) {
+                    const errorText = await tokenResponse.text();
+                    console.error('❌ Token exchange failed:', errorText);
+                    throw new Error(`Token exchange failed: ${errorText}`);
+                }
+
+                const tokenData = await tokenResponse.json();
+                console.log('✅ Token received');
+                
+                // Send Keycloak token to your backend
+                console.log('🔌 Authenticating with backend...');
+                const backendResponse = await fetch('/api/v1/auths/keycloak/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        access_token: tokenData.access_token
+                    }),
+                });
+
+                console.log('🏠 Backend response status:', backendResponse.status);
+
+                if (!backendResponse.ok) {
+                    const errorData = await backendResponse.text();
+                    console.error('❌ Backend auth failed:', errorData);
+                    throw new Error(`Backend authentication failed: ${errorData}`);
+                }
+
+                const userData = await backendResponse.json();
+                console.log('✅ Backend authentication successful');
+                
+                if (userData.success) {
+                    // Store tokens
+                    localStorage.setItem('access_token', userData.access_token);
+                    localStorage.setItem('refresh_token', userData.refresh_token);
+                    localStorage.setItem('user_info', JSON.stringify(userData.user));
+                    localStorage.removeItem('oauth_state'); // Clean up state
+                    
+                    currentUser = userData.user;
+                    showUserInfo(currentUser);
+                    
+                    // Clean up URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                } else {
+                    throw new Error('Login failed: Invalid response');
+                }
+
+            } catch (error) {
+                console.error('❌ Authentication error:', error);
+                showError('Authentication failed: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function loginWithKeycloak() {
+            try {
+                showLoading(true);
+                hideError();
+                console.log('🚀 Starting Keycloak login...');
+                
+                const authUrl = buildKeycloakAuthUrl();
+                console.log('🔗 Redirecting to Keycloak...');
+                window.location.href = authUrl;
+                
+            } catch (error) {
+                console.error('❌ Login error:', error);
+                showError('Login failed: ' + error.message);
+                showLoading(false);
+            }
+        }
+
+        function showUserInfo(user) {
+            document.getElementById('userName').textContent = `${user.firstName} ${user.lastName}`;
+            document.getElementById('userEmail').textContent = user.email;
+            document.getElementById('userRole').textContent = user.role || 'USER';
+            document.getElementById('userId').textContent = user.id;
+            
+            document.getElementById('userInfo').style.display = 'block';
+            document.getElementById('loginBtn').style.display = 'none';
+            hideError();
+            
+            console.log('✅ User info displayed:', user.email);
+        }
+
+        function logout() {
+            console.log('🚪 Logging out...');
+            
+            // Clear local storage
+            localStorage.clear();
+            currentUser = null;
+            
+            // Hide user info, show login button
+            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('loginBtn').style.display = 'flex';
+            
+            // Redirect to Keycloak logout
+            const logoutUrl = `${KEYCLOAK_CONFIG.url}/realms/${KEYCLOAK_CONFIG.realm}/protocol/openid-connect/logout?redirect_uri=${encodeURIComponent('http://localhost:3000/public/index.html')}`;
+            window.location.href = logoutUrl;
+        }
+
+        function showLoading(show) {
+            const loadingDiv = document.getElementById('loading');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            if (show) {
+                loadingDiv.style.display = 'block';
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<span>🔄</span> <span>Authenticating...</span>';
+            } else {
+                loadingDiv.style.display = 'none';
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<span>🔐</span> <span>Login with Google</span>';
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            console.error('❌ Error:', message);
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        // Handle redirect from Keycloak
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
+            const error = urlParams.get('error');
+            const errorDescription = urlParams.get('error_description');
+            
+            console.log('📄 Page loaded');
+            
+            if (error) {
+                console.error('❌ OAuth Error:', error, errorDescription);
+                showError(`Login failed: ${error} - ${errorDescription || 'Unknown error'}`);
+                return;
+            }
+            
+            if (code) {
+                console.log('✅ Authorization code received');
+                exchangeCodeForToken(code, state);
+                return;
+            }
+
+            // Check for existing session
+            const savedToken = localStorage.getItem('access_token');
+            const savedUser = localStorage.getItem('user_info');
+            
+            if (savedToken && savedUser) {
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    showUserInfo(currentUser);
+                    console.log('🔄 Restored existing session for:', currentUser.email);
+                } catch (e) {
+                    console.warn('⚠️ Failed to restore session, clearing storage');
+                    localStorage.clear();
+                }
+            } else {
+                console.log('👋 Ready for login');
+            }
+        };
+    </script>
+</body>
+</html>
